@@ -50,7 +50,7 @@ namespace PMS_API.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("AddSkills")]
-        public async Task<IActionResult> addSkill(Skillset skill) 
+        public async Task<IActionResult> addSkill(SkillsVM skill) 
         {
             if (ModelState.IsValid)
             {
@@ -72,9 +72,25 @@ namespace PMS_API.Controllers
         [Route("EmployeeModule")]
         public async Task<IActionResult> EmployeeModule()
         {
-            return Ok();
+           var employeeList=repository.EmployeeList().ToList();
+
+            return Ok(employeeList);
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("EmployeeByDesignation")]
+
+        public async Task<IActionResult> EmployeeByDesignation(int Id)
+        {
+            var EmpById = repository.EmployeeByDesignation(Id).ToList();
+          
+            return Ok(EmpById);
+        }
 
         /// <summary>
         /// 
@@ -84,7 +100,45 @@ namespace PMS_API.Controllers
         [Route("SkillsModule")]
         public async Task<IActionResult> SkillsModule()
         {
-            return Ok();
+            var skillList = repository.SkilsList().ToList();
+            return Ok(skillList);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+
+        [HttpGet]
+        [Route("SkillbyID")]
+
+        public async Task<IActionResult> SkillbyID(int id)  
+        {
+            var skillbyid=repository.SkillbyID(id).ToList();
+            return Ok(skillbyid);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("AddDesignation")]
+
+        public async Task<IActionResult> AddDesignation(DepartmentVM department)
+        {
+            if(ModelState.IsValid)
+            {
+                repository.AddDesignation(department);
+                repository.Save();
+                return StatusCode(StatusCodes.Status201Created,
+                   new ResponseStatus { status = "Success", message = "Designation Added Successfully" });
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+              new ResponseStatus { status = "Error", message = "Invalid Datas" });
+
         }
 
 
@@ -93,7 +147,7 @@ namespace PMS_API.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("AddSkills")]
+        [Route("GoalsModule")]
         public async Task<IActionResult> GoalsModule()
         {
             return Ok();

@@ -1,4 +1,5 @@
-﻿using PMS_API.Data;
+﻿using Microsoft.AspNetCore.Mvc;
+using PMS_API.Data;
 using PMS_API.Models;
 using PMS_API.Repository;
 using PMS_API.ViewModels;
@@ -36,20 +37,43 @@ namespace PMS_API.Services
             _context.EmployeeModules.Add(module);
         }
 
-        public void AddSkill(Skillset model)
+        public void AddSkill(SkillsVM model)
         {
-            _context.Skillsets.Add(model);
+            Skillset skillset= new Skillset();
+
+            skillset.DesignationId= model.DesignationId;    
+            skillset.Skills= model.Skills;  
+            _context.Skillsets.Add(skillset);
         }
 
         public List<EmployeeModule> EmployeeList()
         {
-            throw new NotImplementedException();
+            return _context.EmployeeModules.ToList();   
+            
         }
 
         
         public List<Skillset> SkilsList()
         {
-            throw new NotImplementedException();
+           return _context.Skillsets.ToList();
+        }
+
+        public List<Skillset> SkillbyID(int id)
+        {
+           return _context.Skillsets.Where(x=>x.DesignationId==id).ToList();
+        }
+
+        public List<EmployeeModule> EmployeeByDesignation(int id)
+        {
+            return _context.EmployeeModules.Where(X=>X.DesignationId==id).ToList();
+        }
+
+        public void AddDesignation(DepartmentVM model)
+        {
+            Department department= new Department();    
+
+            department.DesignationName= model.DesignationName;
+            _context.Departments.Add(department);
         }
 
         public void Save()
