@@ -51,6 +51,8 @@ namespace PMS_API.Data
 
                 entity.ToTable("EmployeeModule");
 
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
                 entity.Property(e => e.DateOfBirth).HasColumnType("date");
 
                 entity.Property(e => e.DateOfJoining).HasColumnType("date");
@@ -66,6 +68,8 @@ namespace PMS_API.Data
                 entity.Property(e => e.ProfilePicture).HasColumnName("Profile Picture");
 
                 entity.Property(e => e.SecondLevelReportingManager).HasColumnName("Second level Reporting Manager");
+
+                entity.Property(e => e.UpdatedOn).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Designation)
                     .WithMany(p => p.EmployeeModules)
