@@ -19,7 +19,8 @@ namespace PMS_API.ViewModels
         public string? FirstLevelReportingManager { get; set; }
         public string? SecondLevelReportingManager { get; set; }
         public string? ProfilePicture { get; set; }
+        public DateTime? CreatedOn { get; set; }
+        public DateTime? UpdatedOn { get; set; }
 
-      //  public virtual Department? DepartmentDepartment { get; set; }
     }
 }

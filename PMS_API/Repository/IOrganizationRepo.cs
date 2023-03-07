@@ -5,12 +5,14 @@ namespace PMS_API.Repository
 {
     public interface IOrganizationRepo
     {
-        public void AddEmployee(EmployeeVM model);
+        public string AddEmployee(EmployeeVM model);
         public void AddSkill(SkillsVM model);
-
+        public string UpdateEmployee(int id , EmployeeVM model);
         public List<EmployeeModule> EmployeeList();
         public List<Skillset> SkilsList();
         public List<Skillset> SkillbyID(int id);
+        //public IEnumerable<EmployeeModule> ShowEmployeelist();
+
 
         public void AddDesignation(DepartmentVM model);
         public List<EmployeeModule> EmployeeByDesignation(int id);
