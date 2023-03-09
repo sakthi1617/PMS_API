@@ -1,4 +1,4 @@
-﻿namespace PMS_API.Models
+﻿namespace PMS_API.SupportModel
 {
     public class ResponseStatus
     {

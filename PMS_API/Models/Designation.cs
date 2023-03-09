@@ -3,16 +3,16 @@ using System.Collections.Generic;
 
 namespace PMS_API.Models
 {
-    public partial class Department
+    public partial class Designation
     {
-        public Department()
+        public Designation()
         {
             EmployeeModules = new HashSet<EmployeeModule>();
             Weightages = new HashSet<Weightage>();
         }
 
-        public int DepartmentId { get; set; }
-        public string? DepartmentName { get; set; }
+        public int DesignationId { get; set; }
+        public string? DesignationName { get; set; }
         public string? AddBy { get; set; }
         public DateTime? AddTime { get; set; }
         public string? ModifiedBy { get; set; }
