@@ -4,8 +4,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using PMS_API.Models;
+using Org.BouncyCastle.Asn1.Ocsp;
+using PMS_API.Data;
 using PMS_API.Repository;
+using PMS_API.SupportModel;
+using PMS_API.ViewModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -15,56 +18,67 @@ namespace PMS_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    
+
     public class OrganizationAuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
         private readonly IPasswordService _passwordService;
-       
-        public OrganizationAuthController(IConfiguration configuration, IPasswordService passwordService)
+        private readonly PMSContext _context;
+
+        public OrganizationAuthController(IConfiguration configuration, IPasswordService passwordService, PMSContext context)
         {
             _configuration = configuration;
             _passwordService = passwordService;
+            _context = context;
+
         }
 
         [HttpPost]
         [Route("adminlogin")]
         public async Task<IActionResult> AdminLogin([FromBody] LoginCredential model)
         {
-            if (model.Username != "Admin")
+            var exisitingUser = await _context.EmployeeModules!.FirstOrDefaultAsync(user => user.Email == model.Username);
+
+            if (exisitingUser == null)
             {
-                return BadRequest("User not found.");
+                return StatusCode(StatusCodes.Status400BadRequest,
+                    new ResponseStatus { status = "Error", message = "Please Register!.." });
             }
-
-            if (model.Password != "Admin@123")
+            else if (!_passwordService.VerifyPasssword(model.Password, exisitingUser.PasswordHash, exisitingUser.PasswordSalt))
             {
-                return BadRequest("Wrong password.");
+                return StatusCode(StatusCodes.Status400BadRequest,
+                     new ResponseStatus { status = "Error", message = "Please Enter Password Correctly" });
             }
-
-            var authClaims = new List<Claim>
+            else
             {
-                new Claim(ClaimTypes.Name, model.Username),
-                new Claim(ClaimTypes.Role, "Admin")
-            };
+               
+
+                var userRole = _context.Roles.SingleOrDefault(x=>x.RollId.Equals(exisitingUser.RoleId)).RollName;
 
 
-            var token = GetToken(authClaims);
-           
+                var authClaims = new List<Claim>
+                      {
+                              new Claim(ClaimTypes.Name, model.Username),
+                              new Claim(ClaimTypes.Role, userRole.ToString())
+                       };
 
-            return Ok(new
-            {
-                token = new JwtSecurityTokenHandler().WriteToken(token),
-                ResponseStatus =new { status = "Success", message = "Login Successfully." }
-        
-            });
-            
+                
+
+                var token = GenerateToken(authClaims);
+                return Ok(new
+                {
+                    token = new JwtSecurityTokenHandler().WriteToken(token),
+                    ResponseStatus = new { status = "Success", message = "Login Successfully." }
+
+                });
+            }
         }
 
-        
 
 
-        private JwtSecurityToken GetToken(List<Claim> authClaims)
-            {
+
+        private JwtSecurityToken GenerateToken(List<Claim> authClaims)
+        {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
@@ -81,21 +95,21 @@ namespace PMS_API.Controllers
 
 
         [HttpPost]
-        [Route("ResetPassword")]
-        public async Task<IActionResult> ResetPassword(string Email, ResetPassword request)
+        [Route("GeneratetPassword")]
+        public async Task<IActionResult> GeneratePassword(string Email, ResetPassword request)
         {
-            
-           if (Email != null)
+
+            if (Email != null)
             {
-               var A = _passwordService.ResetPassword(Email,request).ToString();
+                var A = _passwordService.GeneratePassword(Email, request).ToString();
                 if (A == "Your Account has Already Activated")
                 {
                     return StatusCode(StatusCodes.Status208AlreadyReported, new ResponseStatus { status = "Success", message = A });
                 }
-                return StatusCode(StatusCodes.Status202Accepted,new ResponseStatus { status = "Success", message = "Your Password has been Created." });
+                return StatusCode(StatusCodes.Status201Created, new ResponseStatus { status = "Success", message = "Your Password has been Created." });
             }
 
-            return StatusCode(StatusCodes.Status404NotFound,new ResponseStatus { status = "Error", message = "Id Not Found" });
+            return StatusCode(StatusCodes.Status404NotFound, new ResponseStatus { status = "Error", message = "Id Not Found" });
         }
 
     }

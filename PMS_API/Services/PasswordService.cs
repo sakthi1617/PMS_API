@@ -1,6 +1,6 @@
 ﻿using PMS_API.Data;
-using PMS_API.Models;
 using PMS_API.Repository;
+using PMS_API.SupportModel;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -15,15 +15,15 @@ namespace PMS_API.Services
             _context = context;
         }
 
-        public string ResetPassword(string Email, ResetPassword request)
+        public string GeneratePassword(string Email, ResetPassword request)
         {
 
-            var user = _context.EmployeeModules.FirstOrDefault(u => u.EmailId == Email);
+            var user = _context.EmployeeModules.FirstOrDefault(u => u.Email == Email);
             if (user == null)
             {
                 return "Please Try Again";
             }
-            if(user.IsActivated == false)
+            if(user.IsActivated == false || user.IsActivated == null)
             {
                 HashPassword(request.NewPassword, out byte[] passwordHash, out byte[] passwordSalt);
                 user.PasswordHash = passwordHash;

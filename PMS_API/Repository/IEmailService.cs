@@ -1,4 +1,4 @@
-﻿using PMS_API.Models;
+﻿using PMS_API.SupportModel;
 
 namespace PMS_API.Repository
 {
