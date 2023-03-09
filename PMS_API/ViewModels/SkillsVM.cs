@@ -2,8 +2,6 @@
 {
     public class SkillsVM
     {
-        public int Id { get; set; }
-        public int? DesignationId { get; set; }
-        public string? Skills { get; set; }
+        public string? SkillName { get; set; }
     }
 }

@@ -6,6 +6,7 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using PMS_API.Data;
 using PMS_API.Models;
 using PMS_API.Repository;
+using PMS_API.SupportModel;
 using PMS_API.ViewModels;
 using static System.Net.WebRequestMethods;
 
@@ -29,78 +30,78 @@ namespace PMS_API.Controllers
         }
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="employeeModule"></param>
-        /// <returns></returns>
         [HttpPost]
         [Route("AddEmployee")]
         public async Task<IActionResult> addEmployee(EmployeeVM employeeModule)
         {
             if (ModelState.IsValid)
             {
-                var a = repository.AddEmployee(employeeModule);
+                var employeeCreationResult = repository.AddEmployee(employeeModule);
 
-                if(a== "Created")
+                if (employeeCreationResult != 0 && employeeCreationResult != null)
                 {
-                    repository.Save();
-                    var msg = " Hi " + employeeModule.EmployeeName + "your Account created Succesfully";
-                    var message = new Message(new string[] { employeeModule.EmailId }, "Welcome To PMS", msg.ToString());
 
-                    _emailservice.SendEmail(message);
+                    var userLevelResult = repository.AddUserLevel(employeeModule.DesignationId, employeeModule.DepartmentId, employeeCreationResult);
+                    if (userLevelResult == "Created")
+                    {
+                        var msg = " Hi " + employeeModule.Name + "your Account created Succesfully";
+                        var message = new Message(new string[] { employeeModule.Email }, "Welcome To PMS", msg.ToString());
 
-                    return StatusCode(StatusCodes.Status201Created,
-                    new ResponseStatus { status = "Success", message = "Employee Added Successfully." });
+                        _emailservice.SendEmail(message);
+
+                        return StatusCode(StatusCodes.Status201Created,
+                        new ResponseStatus { status = "Success", message = "Employee Added Successfully." });
+                    }
+                    else
+                    {
+                        return StatusCode(StatusCodes.Status400BadRequest,
+              new ResponseStatus { status = "Error", message = "Something Error" });
+                    }
                 }
                 else
                 {
                     return StatusCode(StatusCodes.Status400BadRequest,
                new ResponseStatus { status = "Error", message = "User Already Exists" });
                 }
-               
+
             }
             return StatusCode(StatusCodes.Status400BadRequest,
                 new ResponseStatus { status = "Error", message = "Invalid Datas" });
         }
 
 
-        [HttpPut]
-        [Route("UpdateEmployee")]
-        public async Task<IActionResult> UpdateEmployee(int id, EmployeeVM employee)
+
+        [HttpPost]
+        [Route("AddDepartment")]
+        public async Task<IActionResult> AddDepartment(DepartmentVM department)
         {
-            try
+            if (ModelState.IsValid)
             {
-
-                if (ModelState.IsValid && employee.EmployeeId != null)
-                {
-                    return repository.UpdateEmployee(id, employee) == "User Not Exists" ? StatusCode(StatusCodes.Status404NotFound,
-                       new ResponseStatus { status = "Not Found", message = "User Not Exists" }) : StatusCode(StatusCodes.Status201Created,
-                       new ResponseStatus { status = "Success", message = "Employee Details Updated Successfully." });
-
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status404NotFound,
-                    new ResponseStatus { status = "Error", message = "Invalid Datas" });
-                }
-
-
+                repository.AddDepartment(department);
+                repository.Save();
+                return StatusCode(StatusCodes.Status201Created,
+                   new ResponseStatus { status = "Success", message = "Department Added Successfully" });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status404NotFound,
-                new ResponseStatus { status = "Error", message = ex.Message });
-            }
-
-
-
+            return StatusCode(StatusCodes.Status400BadRequest,
+               new ResponseStatus { status = "Error", message = "Invalid Datas" });
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
+
+        [HttpPost]
+        [Route("AddDesignation")]
+        public async Task<IActionResult> AddDesignation(DesignationVM designation)
+        {
+            if (ModelState.IsValid)
+            {
+                repository.AddDesignation(designation);
+                repository.Save();
+                return StatusCode(StatusCodes.Status201Created,
+                  new ResponseStatus { status = "Success", message = "Designation Added Successfully" });
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+             new ResponseStatus { status = "Error", message = "Invalid Datas" });
+        }
+
         [HttpPost]
         [Route("AddSkills")]
         public async Task<IActionResult> addSkill(SkillsVM skill)
@@ -116,11 +117,197 @@ namespace PMS_API.Controllers
                new ResponseStatus { status = "Error", message = "Invalid Datas" });
         }
 
+        [HttpPost]
+        [Route("AddAdditionalSkills")]
+        public async Task<IActionResult> AddAdditionalSkills(UserLevelVM level)
+        {
+            if (ModelState.IsValid)
+            {
+                 repository.AddAdditionalSkills(level);
+                repository.Save();
+                return StatusCode(StatusCodes.Status201Created,
+                   new ResponseStatus { status = "Success", message = "Skill Added Successfully" });
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+              new ResponseStatus { status = "Error", message = "Invalid Datas" });
+        }
+
+        [HttpPost]
+        [Route("AddSkillWeightage")]
+        public async Task<IActionResult> AddSkillWeightage(WeightageVM weightage)
+        {
+            if (ModelState.IsValid)
+            {
+                repository.AddSkillWeightage(weightage);
+                repository.Save();
+                return StatusCode(StatusCodes.Status201Created,
+                     new ResponseStatus { status = "Success", message = "Weightage Added Successfully." });
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+                    new ResponseStatus { status = "Error", message = "Invalid Data." });
+        }
+
+        [HttpPut]
+        [Route("UpdateEmployee")]
+        public async Task<IActionResult> UpdateEmployee(int id, EmployeeVM employee)
+        {
+
+
+            if (ModelState.IsValid && employee.EmployeeId != null)
+            {
+
+                string a = repository.UpdateEmployee(id, employee);
+
+                switch (a)
+                {
+                    case "Updated":
+                        return StatusCode(StatusCodes.Status201Created,
+                        new ResponseStatus { status = "Success", message = "Employee Details Updated Successfully." });
+
+                    case "User Not Exists":
+                        return StatusCode(StatusCodes.Status404NotFound,
+                        new ResponseStatus { status = "Not Found", message = "User Not Exists" });
+                }
+
+            }
+
+            return StatusCode(StatusCodes.Status404NotFound,
+                   new ResponseStatus { status = "Error", message = "Invalid Datas" });
+
+        }
+
+        [HttpPut]
+        [Route("UpdateDepertment")]
+        public async Task<IActionResult> UpdateDepertment(int id, DepartmentVM department)
+        {
+            if (ModelState.IsValid)
+            {
+                string a = repository.UpdateDepertment(id, department);
+
+                switch (a)
+                {
+
+                    case "Updated":
+                        repository.Save();
+                        return StatusCode(StatusCodes.Status201Created,
+                           new ResponseStatus { status = "Success", message = "Department Updated Successfully" });
+
+                    case "Department Not Exists":
+
+                        return StatusCode(StatusCodes.Status404NotFound,
+                           new ResponseStatus { status = "Success", message = "Department Not Exists" });
+
+                }
+
+
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+               new ResponseStatus { status = "Error", message = "Invalid Datas" });
+
+        }
+
+
+        [HttpPut]
+        [Route("UpdateDesignation")]
+        public async Task<IActionResult> UpdateDesignation(int id, DesignationVM designation)
+        {
+            if (ModelState.IsValid)
+            {
+                string a = repository.UpdateDesignation(id, designation);
+
+                switch (a)
+                {
+                    case "Updated":
+                        repository.Save();
+                        return StatusCode(StatusCodes.Status201Created,
+                          new ResponseStatus { status = "Success", message = "Designation Updated Successfully" });
+
+                    case "Designation Not Exists":
+
+                        return StatusCode(StatusCodes.Status404NotFound,
+                            new ResponseStatus { status = "Error", message = "Department Not Exists" });
+                }
+
+
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+             new ResponseStatus { status = "Error", message = "Invalid Datas" });
+        }
+
+        [HttpPut]
+        [Route("UpdateSkill")]
+        public async Task<IActionResult> UpdateSkill(int id, SkillsVM skill)
+        {
+            if (ModelState.IsValid)
+            {
+                string a = repository.UpdateSkill(id, skill);
+                switch (a)
+                {
+                    case "Updated":
+                        repository.Save();
+                        return StatusCode(StatusCodes.Status201Created,
+                            new ResponseStatus { status = "Success", message = "Skill Updated SuccessFully" });
+
+                    case "Designation Not Exists":
+
+                        return StatusCode(StatusCodes.Status404NotFound,
+                            new ResponseStatus { status = "Error", message = "Skill Not Exists" });
+                }
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+            new ResponseStatus { status = "Error", message = "Invalid Datas" });
+        }
+
+
+
+        [HttpPut]
+        [Route("UpdateLevelForEmployee")]
+        public async Task<IActionResult> UpdateLevelForEmployee(UserLevelVM level)
+        {
+            if (ModelState.IsValid)
+            {
+                var a = repository.UpdateLevelForEmployee(level);
+
+                switch (a)
+                {
+                    case "Updated":
+                        repository.Save();
+                        return StatusCode(StatusCodes.Status201Created,
+                      new ResponseStatus { status = "Success", message = "Level Updated Successfully." });
+
+                    case "Error":
+                        return StatusCode(StatusCodes.Status404NotFound,
+                           new ResponseStatus { status = "Error", message = "Level not updated" });
+                }
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+               new ResponseStatus { status = "Error", message = "Invalid Datas" });
+        }
+
+        [HttpPut]
+        [Route("UpdateSkillWeightage")]
+        public async Task<IActionResult> UpdateSkillWeightage(WeightageVM weightage)
+        {
+            if (ModelState.IsValid)
+            {
+                var a = repository.UpdateSkillWeightage(weightage);
+                switch (a)
+                {
+                    case "Updated":
+                        repository.Save();
+                        return StatusCode(StatusCodes.Status201Created,
+                            new ResponseStatus { status = "Success", message = "Weightage Updated SuccessFully" });
+
+                    case "Skill Not Exists":
+                        return StatusCode(StatusCodes.Status404NotFound,
+                            new ResponseStatus { status = "Error", message = "Skill Not Exists" });
+                }
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+             new ResponseStatus { status = "Error", message = "Invalid Datas" });
+        }
+
         [HttpGet]
         [Route("EmployeeModule")]
         public async Task<IActionResult> EmployeeModule()
@@ -131,24 +318,36 @@ namespace PMS_API.Controllers
         }
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         [HttpGet]
-        [Route("EmployeeByDesignation")]
-
-        public async Task<IActionResult> EmployeeByDesignation(int Id)
+        [Route("EmployeeById")]
+        public async Task<IActionResult> EmployeeById(int id)
         {
-            var EmpById = repository.EmployeeByDesignation(Id).ToList();
+            var EmployeeId = repository.EmployeeById(id);
+
+            return Ok(EmployeeId);
+        }
+
+
+
+        [HttpGet]
+        [Route("GetEmployeeByDepartment")]
+
+        public async Task<IActionResult> GetEmployeeByDepartment(int Id)
+        {
+            var EmpById = repository.EmployeeByDepartment(Id).ToList();
 
             return Ok(EmpById);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
+        [HttpGet]
+        [Route("DepartmentModule")]
+        public async Task<IActionResult> DepartmentModule()
+        {
+            var departmentlist = repository.DepartmentModule().ToList();
+
+            return Ok(departmentlist);
+        }
+
         [HttpGet]
         [Route("SkillsModule")]
         public async Task<IActionResult> SkillsModule()
@@ -158,67 +357,38 @@ namespace PMS_API.Controllers
         }
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        [HttpGet]
+        [Route("SkillbyDepartmentID")]
+
+        public async Task<IActionResult> SkillbyDepartmentID(int id)
+        {
+            var skillbydeptid = repository.SkillbyDepartmentID(id).ToList();
+            return Ok(skillbydeptid);
+        }
+
 
         [HttpGet]
-        [Route("SkillbyID")]
+        [Route("DesignationModule")]
 
-        public async Task<IActionResult> SkillbyID(int id)
+        public async Task<IActionResult> DesignationModule()
         {
-            var skillbyid = repository.SkillbyID(id).ToList();
-            return Ok(skillbyid);
+            var desig = repository.DesignationModule().ToList();
+            return Ok(desig);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        [HttpPost]
-        [Route("AddDesignation")]
-
-        public async Task<IActionResult> AddDesignation(DepartmentVM department)
-        {
-            if (ModelState.IsValid)
-            {
-                repository.AddDesignation(department);
-                repository.Save();
-                return StatusCode(StatusCodes.Status201Created,
-                   new ResponseStatus { status = "Success", message = "Designation Added Successfully" });
-            }
-            return StatusCode(StatusCodes.Status400BadRequest,
-              new ResponseStatus { status = "Error", message = "Invalid Datas" });
-
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         [HttpGet]
-        [Route("GoalsModule")]
-        public async Task<IActionResult> GoalsModule()
+        [Route ("GetEmployeeSkillsById")]
+        public async Task<IActionResult> GetEmployeeSkillsById(int EmployeeId)
         {
-            return Ok();
+           var Employee = repository.GetEmployeeSkillsById(EmployeeId).ToList();
+            return Ok(Employee);
         }
 
 
 
-        //[HttpGet]
-        //[Route("EmployeeListByManager")]
-        //public async Task<IActionResult> ShowEmployeelist()
-        //{
-        //    var Employeelist = repository.ShowEmployeelist();
-        //    return Ok(Employeelist);
 
-        //}
+
+
 
     }
-
-
-
 }

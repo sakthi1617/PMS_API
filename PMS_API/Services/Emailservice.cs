@@ -1,7 +1,7 @@
-﻿using PMS_API.Models;
-using MailKit.Net.Smtp;
+﻿using MailKit.Net.Smtp;
 using MimeKit;
 using PMS_API.Repository;
+using PMS_API.SupportModel;
 
 namespace PMS_API.Services
 {
