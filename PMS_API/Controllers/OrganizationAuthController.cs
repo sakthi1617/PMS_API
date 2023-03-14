@@ -11,7 +11,7 @@ using PMS_API.SupportModel;
 using PMS_API.ViewModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
+using System.Security.Cryptography;                                                                                                                                                                                         
 using System.Text;
 
 namespace PMS_API.Controllers
@@ -85,7 +85,7 @@ namespace PMS_API.Controllers
                 _configuration["Jwt:Issuer"],
                 _configuration["Jwt:Audience"],
                 authClaims,
-                expires: DateTime.UtcNow.AddMinutes(10),
+                expires: DateTime.UtcNow.AddMinutes(45),
                 signingCredentials: signIn);
 
             return token;
