@@ -12,9 +12,9 @@ namespace PMS_API.Models
         public int? DesignationId { get; set; }
         public int? RoleId { get; set; }
         public DateTime? DateOfJoining { get; set; }
-        public decimal? PriviousExperience { get; set; }
-        public decimal? CurrentExperience { get; set; }
-        public decimal? TotalExperience { get; set; }
+        public int? PriviousExperience { get; set; }
+        public int? CurrentExperience { get; set; }
+        public int? TotalExperience { get; set; }
         public string? FirstLevelReportingManager { get; set; }
         public string? SecondLevelReportingManager { get; set; }
         public DateTime? DateOfBirth { get; set; }

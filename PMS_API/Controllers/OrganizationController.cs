@@ -14,7 +14,7 @@ namespace PMS_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    
     public class OrganizationController : ControllerBase
     {
 
@@ -29,7 +29,8 @@ namespace PMS_API.Controllers
             _emailservice = emailservice;
         }
 
-
+        [Authorize(Roles ="Admin")]
+      
         [HttpPost]
         [Route("AddEmployee")]
         public async Task<IActionResult> addEmployee(EmployeeVM employeeModule)
@@ -55,7 +56,7 @@ namespace PMS_API.Controllers
                     else
                     {
                         return StatusCode(StatusCodes.Status400BadRequest,
-              new ResponseStatus { status = "Error", message = "Something Error" });
+                          new ResponseStatus { status = "Error", message = "Something Error" });
                     }
                 }
                 else
@@ -69,10 +70,11 @@ namespace PMS_API.Controllers
                 new ResponseStatus { status = "Error", message = "Invalid Datas" });
         }
 
-
+                                                                                                    
 
         [HttpPost]
         [Route("AddDepartment")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddDepartment(DepartmentVM department)
         {
             if (ModelState.IsValid)
@@ -89,6 +91,7 @@ namespace PMS_API.Controllers
 
         [HttpPost]
         [Route("AddDesignation")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddDesignation(DesignationVM designation)
         {
             if (ModelState.IsValid)
@@ -104,6 +107,7 @@ namespace PMS_API.Controllers
 
         [HttpPost]
         [Route("AddSkills")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> addSkill(SkillsVM skill)
         {
             if (ModelState.IsValid)
@@ -119,14 +123,27 @@ namespace PMS_API.Controllers
 
         [HttpPost]
         [Route("AddAdditionalSkills")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddAdditionalSkills(UserLevelVM level)
         {
             if (ModelState.IsValid)
             {
-                 repository.AddAdditionalSkills(level);
-                repository.Save();
-                return StatusCode(StatusCodes.Status201Created,
-                   new ResponseStatus { status = "Success", message = "Skill Added Successfully" });
+             var a =    repository.AddAdditionalSkills(level);
+                switch (a)
+                {
+                    case "Success":
+                        repository.Save();
+                        return StatusCode(StatusCodes.Status201Created,
+                           new ResponseStatus { status = "Success", message = "Skill Added Successfully" });
+
+                    case "Skill Already Exist":
+                        return StatusCode(StatusCodes.Status400BadRequest,
+             new ResponseStatus { status = "Error", message = "Skill Already Added This Employee..." });
+                    case "User Not exists":
+                        return StatusCode(StatusCodes.Status404NotFound,
+             new ResponseStatus { status = "Error", message ="User Not Found" });
+                }
+               
 
             }
             return StatusCode(StatusCodes.Status400BadRequest,
@@ -135,6 +152,7 @@ namespace PMS_API.Controllers
 
         [HttpPost]
         [Route("AddSkillWeightage")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddSkillWeightage(WeightageVM weightage)
         {
             if (ModelState.IsValid)
@@ -150,6 +168,7 @@ namespace PMS_API.Controllers
 
         [HttpPut]
         [Route("UpdateEmployee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateEmployee(int id, EmployeeVM employee)
         {
 
@@ -179,6 +198,7 @@ namespace PMS_API.Controllers
 
         [HttpPut]
         [Route("UpdateDepertment")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDepertment(int id, DepartmentVM department)
         {
             if (ModelState.IsValid)
@@ -210,6 +230,7 @@ namespace PMS_API.Controllers
 
         [HttpPut]
         [Route("UpdateDesignation")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDesignation(int id, DesignationVM designation)
         {
             if (ModelState.IsValid)
@@ -237,6 +258,7 @@ namespace PMS_API.Controllers
 
         [HttpPut]
         [Route("UpdateSkill")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateSkill(int id, SkillsVM skill)
         {
             if (ModelState.IsValid)
@@ -263,6 +285,7 @@ namespace PMS_API.Controllers
 
         [HttpPut]
         [Route("UpdateLevelForEmployee")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateLevelForEmployee(UserLevelVM level)
         {
             if (ModelState.IsValid)
@@ -279,6 +302,9 @@ namespace PMS_API.Controllers
                     case "Error":
                         return StatusCode(StatusCodes.Status404NotFound,
                            new ResponseStatus { status = "Error", message = "Level not updated" });
+                    case "User Not Exist":
+                        return StatusCode(StatusCodes.Status404NotFound,
+                           new ResponseStatus { status = "Error", message = "User Not Exist" });
                 }
             }
             return StatusCode(StatusCodes.Status400BadRequest,
@@ -287,6 +313,7 @@ namespace PMS_API.Controllers
 
         [HttpPut]
         [Route("UpdateSkillWeightage")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateSkillWeightage(WeightageVM weightage)
         {
             if (ModelState.IsValid)
@@ -310,6 +337,7 @@ namespace PMS_API.Controllers
 
         [HttpGet]
         [Route("EmployeeModule")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> EmployeeModule()
         {
             var employeeList = repository.EmployeeList().ToList();
@@ -320,10 +348,14 @@ namespace PMS_API.Controllers
 
         [HttpGet]
         [Route("EmployeeById")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> EmployeeById(int id)
         {
             var EmployeeId = repository.EmployeeById(id);
-
+            if (EmployeeId == null)
+            {
+                return Ok("User Data Unavailable");
+            }
             return Ok(EmployeeId);
         }
 
@@ -331,7 +363,7 @@ namespace PMS_API.Controllers
 
         [HttpGet]
         [Route("GetEmployeeByDepartment")]
-
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> GetEmployeeByDepartment(int Id)
         {
             var EmpById = repository.EmployeeByDepartment(Id).ToList();
@@ -341,6 +373,7 @@ namespace PMS_API.Controllers
 
         [HttpGet]
         [Route("DepartmentModule")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> DepartmentModule()
         {
             var departmentlist = repository.DepartmentModule().ToList();
@@ -350,6 +383,7 @@ namespace PMS_API.Controllers
 
         [HttpGet]
         [Route("SkillsModule")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> SkillsModule()
         {
             var skillList = repository.SkilsList().ToList();
@@ -359,7 +393,7 @@ namespace PMS_API.Controllers
 
         [HttpGet]
         [Route("SkillbyDepartmentID")]
-
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> SkillbyDepartmentID(int id)
         {
             var skillbydeptid = repository.SkillbyDepartmentID(id).ToList();
@@ -369,7 +403,7 @@ namespace PMS_API.Controllers
 
         [HttpGet]
         [Route("DesignationModule")]
-
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> DesignationModule()
         {
             var desig = repository.DesignationModule().ToList();
@@ -377,18 +411,69 @@ namespace PMS_API.Controllers
         }
 
         [HttpGet]
-        [Route ("GetEmployeeSkillsById")]
+        [Route("GetEmployeeSkillsById")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> GetEmployeeSkillsById(int EmployeeId)
         {
-           var Employee = repository.GetEmployeeSkillsById(EmployeeId).ToList();
+            var Employee = repository.GetEmployeeSkillsById(EmployeeId).ToList();
             return Ok(Employee);
         }
 
+        [HttpDelete]
+        [Route("DeleteEmployee")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteEmployee(int EmployeeId)
+        {
+            var a = repository.DeleteEmployee(EmployeeId);
+
+            switch (a)
+            {
+                case "Deleted":
+                    repository.Save();
+                    return StatusCode(StatusCodes.Status200OK,
+                        new ResponseStatus { status = "Success", message = "Employee Details Deleted SuccessFully" });
+                case "Error":
+                    return StatusCode(StatusCodes.Status404NotFound,
+                           new ResponseStatus { status = "Error", message = "Employee not found" });
+
+            }
+            return StatusCode(StatusCodes.Status404NotFound,
+                          new ResponseStatus { status = "Error", message = "Something Error" });
+        }
 
 
+        [HttpDelete]
+        [Route("DeleteSkillbyEmp")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteSkillbyEmp(int EmpployeeId, int SkillId)
+        {
+            var a = repository.DeleteSkillbyEmp(EmpployeeId, SkillId);
+            switch (a)
+            {
+                case "Employee Skill Removed":
+                    repository.Save();
+                    return StatusCode(StatusCodes.Status200OK,
+                       new ResponseStatus { status = "Success", message = "Employee Skill Deleted SuccessFully" });
 
+                case "Error":
+                    return StatusCode(StatusCodes.Status404NotFound,
+                          new ResponseStatus { status = "Error", message = "Employee Skill not found" });
 
+            }
 
+            return StatusCode(StatusCodes.Status404NotFound,
+                        new ResponseStatus { status = "Error", message = "Something Error" });
+        }
 
+        [HttpGet]
+        [Route("FindRequiredEmployee")]
+        [Authorize(Roles ="Admin")]
+        public async Task<IActionResult> FindRequiredEmployee([FromQuery] FindEmployee find)
+        {
+            var emplist = repository.FindRequiredEmployee(find);
+
+            return Ok(emplist);
+        }
     }
 }
+

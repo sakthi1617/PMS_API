@@ -11,7 +11,7 @@ namespace PMS_API.ViewModels
         public int? DesignationId { get; set; }
         public int? RoleId { get; set; }
         public DateTime? DateOfJoining { get; set; }
-        public decimal? PriviousExperience { get; set; }
+        public int? PriviousExperience { get; set; }
 
         public string? FirstLevelReportingManager { get; set; }
         public string? SecondLevelReportingManager { get; set; }

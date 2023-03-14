@@ -4,7 +4,10 @@ using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using PMS_API.Data;
 using PMS_API.Models;
 using PMS_API.Repository;
+using PMS_API.SupportModel;
 using PMS_API.ViewModels;
+using System.Linq;
+using System.Runtime.Intrinsics.Arm;
 
 namespace PMS_API.Services
 {
@@ -44,6 +47,8 @@ namespace PMS_API.Services
                 module.PersonalEmail = model.PersonalEmail;
                 module.ProfilePicture = model.ProfilePicture;
                 module.AddTime = DateTime.Now;
+                module.IsDeleted = false;
+                module.IsActivated = false;
 
                 _context.EmployeeModules.Add(module);
                 _context.SaveChanges();
@@ -104,17 +109,52 @@ namespace PMS_API.Services
             _context.Skills.Add(skill);
         }
 
+        public string AddAdditionalSkills(UserLevelVM level)
+        {
+           
+            var users = _context.EmployeeModules.Where(x => x.EmployeeId == level.EmployeeId && x.IsDeleted != true).FirstOrDefault();
+            if(users != null)
+            {
+                var lvl = _context.UserLevels.Where(x => x.SkillId == level.SkillId && x.EmployeeId == level.EmployeeId).FirstOrDefault();
+                if (lvl != null)
+                {
+                    return "Skill Already Exist";
+                }
 
+                UserLevel user = new UserLevel();
 
+                user.EmployeeId = level.EmployeeId;
+                user.SkillId = level.SkillId;
+                user.Level = 0;
+                user.Weightage = level.Weightage;
+
+                _context.UserLevels.Add(user);
+                return "Success";
+            }
+            return "User Not exists";
+          
+        }
+
+        public void AddSkillWeightage(WeightageVM weightage)
+        {
+            Weightage weightage1 = new Weightage();
+
+            weightage1.DepartmentId = weightage.DepartmentId;
+            weightage1.DesignationId = weightage.DesignationId;
+            weightage1.SkillId = weightage.SkillId;
+            weightage1.Weightage1 = weightage.Weightage1;
+
+            _context.Weightages.Add(weightage1);
+        }
 
         public string UpdateEmployee(int id, EmployeeVM model)
         {
             try
             {
-                var existingUser = _context.EmployeeModules.FirstOrDefault(x => x.Email == model.Email);
-                if (existingUser == null)
-                {
-                    var Emp = _context.EmployeeModules.Where(s => s.EmployeeId == id).FirstOrDefault();
+               // var existingUser = _context.EmployeeModules.FirstOrDefault(x => x.Email == model.Email);
+                //if (existingUser == null)
+                //{
+                    var Emp = _context.EmployeeModules.Where(s => s.EmployeeId == id && s.IsDeleted != true).FirstOrDefault();
                     if (Emp != null)
                     {
                         Emp.Name = model.Name;
@@ -146,11 +186,11 @@ namespace PMS_API.Services
                     {
                         return "User Not Exists";
                     }
-                }
-                else
-                {
-                    return "User Already Exists";
-                }
+                //}
+                //else
+                //{
+                //    return "User Already Exists";
+                //}
 
             }
             catch (Exception ex)
@@ -234,60 +274,13 @@ namespace PMS_API.Services
             }
         }
 
-
-        public List<EmployeeModule> EmployeeList()
-        {
-
-            return _context.EmployeeModules.ToList();
-
-        }
-
-        public EmployeeModule EmployeeById(int id)
-        {
-            return _context.EmployeeModules.Where(s => s.EmployeeId == id).FirstOrDefault();
-        }
-
-        public List<EmployeeModule> EmployeeByDepartment(int id)
-        {
-            return _context.EmployeeModules.Where(X => X.DepartmentId == id).ToList();
-        }
-
-        public List<Department> DepartmentModule()
-        {
-            return _context.Departments.ToList();
-        }
-
-
-        public List<Skill> SkilsList()
-        {
-            return _context.Skills.ToList();
-        }
-
-        public List<Weightage> SkillbyDepartmentID(int id)
-        {
-            return _context.Weightages.Where(x => x.DepartmentId == id).ToList();
-        }
-
-        public List<Designation> DesignationModule()
-        {
-            return _context.Designations.ToList();
-        }
-        public void AddSkillWeightage(WeightageVM weightage)
-        {
-            Weightage weightage1 = new Weightage();
-
-            weightage1.DepartmentId = weightage.DepartmentId;
-            weightage1.DesignationId = weightage.DesignationId;
-            weightage1.SkillId = weightage.SkillId;
-            weightage1.Weightage1 = weightage.Weightage1;
-
-            _context.Weightages.Add(weightage1);
-        }
-
-
-
         public string UpdateLevelForEmployee(UserLevelVM level)
         {
+            var user = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.EmployeeId == level.EmployeeId).FirstOrDefault();
+            if (user == null)
+            {
+                return "User Not Exist";
+            }
             var weightages = _context.UserLevels.Where(x => x.EmployeeId.Equals(level.EmployeeId) && x.SkillId.Equals(level.SkillId)).FirstOrDefault();
 
             if (weightages != null)
@@ -302,45 +295,12 @@ namespace PMS_API.Services
             return "Error";
         }
 
-        public IQueryable<GetEmployeeSkillsByIdVM> GetEmployeeSkillsById(int id)
-        {
-
-            var skill = _context.UserLevels.Where(x => x.EmployeeId.Equals(id)).FirstOrDefault();
-
-            var join =  from emp in _context.EmployeeModules
-                       join lvl in _context.UserLevels
-                       on emp.EmployeeId equals lvl.EmployeeId
-                       join skl in _context.Skills
-                       on lvl.SkillId equals skl.SkillId
-                       join dep in _context.Departments
-                       on emp.DepartmentId equals dep.DepartmentId
-                       join des in _context.Designations
-                       on emp.DesignationId equals des.DesignationId
-                       select new GetEmployeeSkillsByIdVM
-                       {
-                           EmployeeId = emp.EmployeeId,
-                           EmpName = emp.Name,
-                           Skill = skl.SkillName,
-                           SkillId = skl.SkillId,
-                           DepartmenName = dep.DepartmentName,
-                           DepartmentId = dep.DepartmentId,
-                           DesignationId = des.DesignationId,
-                           DesignationName = des.DesignationName,
-                           Level = lvl.Level,
-                           Weightage = lvl.Weightage,
-                           PotentialLevel = emp.PotentialLevel
-                           
-                       };
-
-            return join;
-        }
-
         public string UpdateSkillWeightage(WeightageVM weightage)
         {
 
             try
             {
-                var Weight = _context.Weightages.Where(s => s.SkillId == weightage.SkillId && s.DesignationId == weightage.DesignationId && s.DepartmentId==weightage.DepartmentId ).FirstOrDefault();
+                var Weight = _context.Weightages.Where(s => s.SkillId == weightage.SkillId && s.DesignationId == weightage.DesignationId && s.DepartmentId == weightage.DepartmentId).FirstOrDefault();
                 if (Weight != null)
                 {
                     Weight.Weightage1 = weightage.Weightage1;
@@ -359,23 +319,144 @@ namespace PMS_API.Services
             }
         }
 
-        public void AddAdditionalSkills(UserLevelVM level)
+        public List<EmployeeModule> EmployeeList()
         {
-            UserLevel user = new UserLevel();
 
-            user.EmployeeId = level.EmployeeId;
-            user.SkillId = level.SkillId;
-            user.Level = 0;
-            user.Weightage = level.Weightage;
-
-            _context.UserLevels.Add(user);
+            return _context.EmployeeModules.Where(s => s.IsDeleted != true && s.IsActivated != false).ToList();
 
         }
+
+        public EmployeeModule EmployeeById(int id)
+        {
+            return _context.EmployeeModules.Where(s => s.EmployeeId == id && s.IsDeleted != true).FirstOrDefault();
+        }
+
+        public List<EmployeeModule> EmployeeByDepartment(int id)
+        {
+            return _context.EmployeeModules.Where(X => X.DepartmentId == id && X.IsDeleted != true).ToList();
+        }
+
+        public List<Department> DepartmentModule()
+        {
+            return _context.Departments.ToList();
+        }
+
+        public List<Skill> SkilsList()
+        {
+            return _context.Skills.ToList();
+        }
+
+        public List<Weightage> SkillbyDepartmentID(int id)
+        {
+            return _context.Weightages.Where(x => x.DepartmentId == id).ToList();
+        }
+
+        public List<Designation> DesignationModule()
+        {
+            return _context.Designations.ToList();
+        }
+
+        public IQueryable<GetEmployeeSkillsByIdVM> GetEmployeeSkillsById(int id)
+        {
+             //var skill = _context.UserLevels.Where(x => x.EmployeeId.Equals(id)).FirstOrDefault();
+
+            //var deleted = _context.
+
+            var join = from emp in _context.EmployeeModules
+                       join lvl in _context.UserLevels
+                       on emp.EmployeeId equals lvl.EmployeeId
+                       join skl in _context.Skills
+                       on lvl.SkillId equals skl.SkillId
+                       join dep in _context.Departments
+                       on emp.DepartmentId equals dep.DepartmentId
+                       join des in _context.Designations
+                       on emp.DesignationId equals des.DesignationId where emp.EmployeeId== id && emp.IsDeleted != true
+                       select new GetEmployeeSkillsByIdVM
+                       {
+                           EmployeeId = emp.EmployeeId,
+                           EmpName = emp.Name,
+                           Skill = skl.SkillName,
+                           SkillId = skl.SkillId,
+                           DepartmenName = dep.DepartmentName,
+                           DepartmentId = dep.DepartmentId,
+                           DesignationId = des.DesignationId,
+                           DesignationName = des.DesignationName,
+                           Level = lvl.Level,
+                           Weightage = lvl.Weightage,
+                           PotentialLevel = emp.PotentialLevel
+
+                       };
+
+            return join;
+        }
+
+        public string DeleteEmployee(int EmployeeId)
+        {
+            var DelEmp = _context.EmployeeModules.Where(s => s.EmployeeId == EmployeeId).FirstOrDefault();
+            if (DelEmp != null)
+            {
+                DelEmp.IsDeleted = true;
+                _context.EmployeeModules.Update(DelEmp);
+                return "Deleted";
+            }
+
+            return "Error";
+        }
+
+        public string DeleteSkillbyEmp(int EmployeeId, int SkillId)
+        {
+            var DelskillbyEmp = _context.UserLevels.Where(s => s.EmployeeId == EmployeeId && s.SkillId == SkillId).FirstOrDefault();
+            if (DelskillbyEmp != null)
+            {
+                _context.UserLevels.Remove(DelskillbyEmp);
+                return "Employee Skill Removed";
+            }
+            return "Error";
+        }
+
+        public dynamic FindRequiredEmployee(FindEmployee find)
+        {
+
+            List<filterEmployee> skills = new List<filterEmployee>();
+
+            foreach (var skillId in find.Skillid)
+            {
+                var skill = from lvl in _context.UserLevels
+                            join emp in _context.EmployeeModules
+                            on lvl.EmployeeId equals emp.EmployeeId
+                            join skl in _context.Skills
+                            on lvl.SkillId equals skl.SkillId
+                            where skl.SkillId.Equals(skillId) && lvl.Level.Equals(find.Level) && (emp.TotalExperience >= find.MinimumExperience) && (emp.TotalExperience <= find.MaximumExperience) && (emp.IsDeleted != true)
+                            select new filterEmployee
+                            {
+                                EmpId = (int)emp.EmployeeId,
+                                EmployeeName = emp.Name,
+                                SkillId = skl.SkillId,
+                                SkillName = skl.SkillName,
+                                Level = lvl.Level
+
+                            };
+                skills.AddRange(skill);
+            }
+
+            return skills.ToList();
+        }
+
         public void Save()
         {
             _context.SaveChanges();
         }
 
-       
+
     }
 }
+
+
+
+
+
+
+
+
+
+
