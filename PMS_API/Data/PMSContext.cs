@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using PMS_API.Models;
@@ -65,8 +64,6 @@ namespace PMS_API.Data
 
                 entity.Property(e => e.AddTime).HasColumnType("datetime");
 
-                entity.Property(e => e.CurrentExperience).HasColumnType("decimal(18, 2)");
-
                 entity.Property(e => e.DateOfBirth).HasColumnType("date");
 
                 entity.Property(e => e.DateOfJoining).HasColumnType("date");
@@ -77,11 +74,7 @@ namespace PMS_API.Data
 
                 entity.Property(e => e.PersonalEmail).HasColumnName("personalEmail");
 
-                entity.Property(e => e.PriviousExperience).HasColumnType("decimal(18, 2)");
-
                 entity.Property(e => e.SecondLevelReportingManager).HasColumnName("Second Level Reporting Manager");
-
-                entity.Property(e => e.TotalExperience).HasColumnType("decimal(18, 2)");
 
                 entity.HasOne(d => d.Department)
                     .WithMany(p => p.EmployeeModules)
@@ -112,21 +105,10 @@ namespace PMS_API.Data
 
             modelBuilder.Entity<UserLevel>(entity =>
             {
-
-                entity.HasKey(e => e.Id)
-                    .HasName("PK__UserLeve__3214EC07088B6BD6");
-
                 entity.ToTable("UserLevel");
 
-                entity.HasOne(d => d.Employee)
-                    .WithMany()
-                    .HasForeignKey(d => d.EmployeeId)
-                    .HasConstraintName("FK__UserLevel__Emplo__5070F446");
+                entity.HasOne(d => d.Employee);
 
-                entity.HasOne(d => d.Skill)
-                    .WithMany()
-                    .HasForeignKey(d => d.SkillId)
-                    .HasConstraintName("FK__UserLevel__Skill__5165187F");
             });
 
             modelBuilder.Entity<Weightage>(entity =>
