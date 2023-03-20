@@ -1,11 +1,18 @@
-﻿using System;
+﻿using PMS_API.Models;
+using System;
 using System.Collections.Generic;
 
 namespace PMS_API.Models
 {
     public partial class EmployeeModule
     {
-        public int? EmployeeId { get; set; }
+        public EmployeeModule()
+        {
+            GoalModules = new HashSet<GoalModule>();
+            UserLevels = new HashSet<UserLevel>();
+        }
+
+        public int EmployeeId { get; set; }
         public string? Name { get; set; }
         public string? Email { get; set; }
         public int? DepartmentId { get; set; }
@@ -38,5 +45,7 @@ namespace PMS_API.Models
         public virtual Department? Department { get; set; }
         public virtual Designation? Designation { get; set; }
         public virtual Role? Role { get; set; }
+        public virtual ICollection<GoalModule> GoalModules { get; set; }
+        public virtual ICollection<UserLevel> UserLevels { get; set; }
     }
 }
