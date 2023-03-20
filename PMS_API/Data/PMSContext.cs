@@ -20,6 +20,7 @@ namespace PMS_API.Data
         public virtual DbSet<Department> Departments { get; set; } = null!;
         public virtual DbSet<Designation> Designations { get; set; } = null!;
         public virtual DbSet<EmployeeModule> EmployeeModules { get; set; } = null!;
+        public virtual DbSet<GoalModule> GoalModules { get; set; } = null!;
         public virtual DbSet<Potential> Potentials { get; set; } = null!;
         public virtual DbSet<Role> Roles { get; set; } = null!;
         public virtual DbSet<Skill> Skills { get; set; } = null!;
@@ -92,6 +93,25 @@ namespace PMS_API.Data
                     .HasConstraintName("FK__EmployeeM__RoleI__4E88ABD4");
             });
 
+            modelBuilder.Entity<GoalModule>(entity =>
+            {
+                entity.HasKey(e => e.GoalId)
+                    .HasName("PK__GoalModu__8A4FFFD14378DF24");
+
+                entity.ToTable("GoalModule");
+
+                entity.Property(e => e.AssignedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.DueDate).HasColumnType("date");
+
+                entity.Property(e => e.StartDate).HasColumnType("date");
+
+                entity.HasOne(d => d.Employee)
+                    .WithMany(p => p.GoalModules)
+                    .HasForeignKey(d => d.EmployeeId)
+                    .HasConstraintName("FK__GoalModul__Emplo__5AEE82B9");
+            });
+
             modelBuilder.Entity<Potential>(entity =>
             {
                 entity.ToTable("Potential");
@@ -107,8 +127,15 @@ namespace PMS_API.Data
             {
                 entity.ToTable("UserLevel");
 
-                entity.HasOne(d => d.Employee);
+                entity.HasOne(d => d.Employee)
+                    .WithMany(p => p.UserLevels)
+                    .HasForeignKey(d => d.EmployeeId)
+                    .HasConstraintName("FK__UserLevel__Emplo__5070F446");
 
+                entity.HasOne(d => d.Skill)
+                    .WithMany(p => p.UserLevels)
+                    .HasForeignKey(d => d.SkillId)
+                    .HasConstraintName("FK__UserLevel__Skill__5165187F");
             });
 
             modelBuilder.Entity<Weightage>(entity =>

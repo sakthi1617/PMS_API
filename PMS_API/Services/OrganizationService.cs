@@ -12,11 +12,11 @@ using System.Runtime.Intrinsics.Arm;
 namespace PMS_API.Services
 {
 
-    public class OrganizationRepo : IOrganizationRepo
+    public class OrganizationService : IOrganizationRepo
     {
 
         private readonly PMSContext _context;
-        public OrganizationRepo(PMSContext context)
+        public OrganizationService(PMSContext context)
         {
             _context = context;
         }
@@ -25,6 +25,7 @@ namespace PMS_API.Services
         {
 
             EmployeeModule module = new EmployeeModule();
+
 
             var existingUser = _context.EmployeeModules.FirstOrDefault(x => x.Email == model.Email);
             if (existingUser == null)
@@ -285,13 +286,11 @@ namespace PMS_API.Services
 
             if (weightages != null)
             {
-
-
                 weightages.Level = level.Level;
                 _context.UserLevels.Update(weightages);
                 return "Updated";
             }
-
+                 
             return "Error";
         }
 
