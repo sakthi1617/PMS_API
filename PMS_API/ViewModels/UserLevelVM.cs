@@ -7,5 +7,6 @@
         public int? Level { get; set; }
         public int? Weightage { get; set; }
 
+        public string Description { get; set; }
     }
 }

@@ -14,6 +14,7 @@ namespace PMS_API.Models
         public int? Weightage { get; set; }
 
         public virtual EmployeeModule? Employee { get; set; }
+
         public virtual Skill? Skill { get; set; }
     }
 }

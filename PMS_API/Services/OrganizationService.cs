@@ -12,19 +12,22 @@ using System.Runtime.Intrinsics.Arm;
 namespace PMS_API.Services
 {
 
-    public class OrganizationRepo : IOrganizationRepo
+    public class OrganizationService : IOrganizationRepo
     {
 
         private readonly PMSContext _context;
-        public OrganizationRepo(PMSContext context)
+        private readonly IEmailService _emailservice;
+        public OrganizationService(PMSContext context , IEmailService emailService)
         {
             _context = context;
+            _emailservice = emailService;   
         }
 
         public int? AddEmployee(EmployeeVM model)
         {
 
             EmployeeModule module = new EmployeeModule();
+
 
             var existingUser = _context.EmployeeModules.FirstOrDefault(x => x.Email == model.Email);
             if (existingUser == null)
@@ -274,6 +277,32 @@ namespace PMS_API.Services
             }
         }
 
+
+        public string ReqForUpdateLvl(UserLevelVM level)
+        {
+            var user = _context.EmployeeModules.Where(x => x.EmployeeId.Equals(level.EmployeeId) && x.IsDeleted.Equals(false)).FirstOrDefault();
+
+            var data = from emp in _context.EmployeeModules
+                       join man in _context.ManagersTbls
+                       on emp.SecondLevelReportingManager equals man.ManagerId
+
+                       where emp.EmployeeId == level.EmployeeId && emp.IsDeleted != true
+                       select new
+                       {
+
+                           emp,
+                           man
+
+                       };
+            var mail = data.FirstOrDefault();
+
+            var msg = "Hi" + mail.man.ManagerName + "I Would Like To Improve"+ user.Name+"'s SkillLevel to Next Level For "+ level.Description+ "Kindly Approve This"+ "<button type=\"button\" class=\"btn btn-success\" style=\"width:100px;height:50px;font-size:20px\">Confirm</button>";
+            var message = new Message(new string[] { mail.man.Email }, "Welcome To PMS", msg.ToString());
+            _emailservice.SendEmail(message);
+            return "0000";
+
+        }
+
         public string UpdateLevelForEmployee(UserLevelVM level)
         {
             var user = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.EmployeeId == level.EmployeeId).FirstOrDefault();
@@ -285,13 +314,11 @@ namespace PMS_API.Services
 
             if (weightages != null)
             {
-
-
                 weightages.Level = level.Level;
                 _context.UserLevels.Update(weightages);
                 return "Updated";
             }
-
+                 
             return "Error";
         }
 
