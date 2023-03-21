@@ -280,7 +280,16 @@ namespace PMS_API.Controllers
             new ResponseStatus { status = "Error", message = "Invalid Datas" });
         }
 
-
+        [HttpPut]
+        [Route("ReqForUpdateLvl")]
+        public async Task<IActionResult> ReqForUpdateLvl(UserLevelVM level)
+        {
+            if (ModelState.IsValid)
+            {
+                var a = repository.ReqForUpdateLvl(level);
+            }
+            return Ok();
+        }
 
         [HttpPut]
         [Route("UpdateLevelForEmployee")]
@@ -474,15 +483,15 @@ namespace PMS_API.Controllers
             return Ok(emplist);
         }
 
-        [HttpGet]
-        [Route("LevelupManager")]
-        //[Authorize(Roles = "Admin")]
-        public async Task<IActionResult> ApproveEmail([FromQuery] bool IsReject,int EmployeeId, int SkillId)
-        {
+        //[HttpGet]
+        //[Route("LevelupManager")]
+        ////[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> ApproveEmail([FromQuery] bool IsReject,int EmployeeId, int SkillId)
+        //{
             
 
-            return Ok();
-        }
+        //    return Ok();
+        //}
     }
 }
 

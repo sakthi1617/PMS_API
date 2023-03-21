@@ -13,8 +13,8 @@ namespace PMS_API.ViewModels
         public DateTime? DateOfJoining { get; set; }
         public int? PriviousExperience { get; set; }
 
-        public string? FirstLevelReportingManager { get; set; }
-        public string? SecondLevelReportingManager { get; set; }
+        public int? FirstLevelReportingManager { get; set; }
+        public int? SecondLevelReportingManager { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public int? Age { get; set; }
         public string? Gender { get; set; }

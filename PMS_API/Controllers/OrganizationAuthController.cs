@@ -57,6 +57,7 @@ namespace PMS_API.Controllers
                 var authClaims = new List<Claim>
                       {
                               new Claim(ClaimTypes.Name, model.Username),
+
                               new Claim(ClaimTypes.Role, userRole.ToString())
                        };
 
@@ -66,6 +67,9 @@ namespace PMS_API.Controllers
                 return Ok(new
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
+                    name = exisitingUser?.Name,
+                    id = exisitingUser.EmployeeId,
+                    role = userRole,    
                     ResponseStatus = new { status = "Success", message = "Login Successfully." }
 
                 });

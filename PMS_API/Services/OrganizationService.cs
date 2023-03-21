@@ -16,9 +16,11 @@ namespace PMS_API.Services
     {
 
         private readonly PMSContext _context;
-        public OrganizationService(PMSContext context)
+        private readonly IEmailService _emailservice;
+        public OrganizationService(PMSContext context , IEmailService emailService)
         {
             _context = context;
+            _emailservice = emailService;   
         }
 
         public int? AddEmployee(EmployeeVM model)
@@ -273,6 +275,32 @@ namespace PMS_API.Services
             {
                 throw ex;
             }
+        }
+
+
+        public string ReqForUpdateLvl(UserLevelVM level)
+        {
+            var user = _context.EmployeeModules.Where(x => x.EmployeeId.Equals(level.EmployeeId) && x.IsDeleted.Equals(false)).FirstOrDefault();
+
+            var data = from emp in _context.EmployeeModules
+                       join man in _context.ManagersTbls
+                       on emp.SecondLevelReportingManager equals man.ManagerId
+
+                       where emp.EmployeeId == level.EmployeeId && emp.IsDeleted != true
+                       select new
+                       {
+
+                           emp,
+                           man
+
+                       };
+            var mail = data.FirstOrDefault();
+
+            var msg = "Hi" + mail.man.ManagerName + "I Would Like To Improve"+ user.Name+"'s SkillLevel to Next Level For "+ level.Description+ "Kindly Approve This"+ "<button type=\"button\" class=\"btn btn-success\" style=\"width:100px;height:50px;font-size:20px\">Confirm</button>";
+            var message = new Message(new string[] { mail.man.Email }, "Welcome To PMS", msg.ToString());
+            _emailservice.SendEmail(message);
+            return "0000";
+
         }
 
         public string UpdateLevelForEmployee(UserLevelVM level)
