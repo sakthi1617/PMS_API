@@ -27,17 +27,22 @@ namespace PMS_API.Services
             emailMessage.From.Add(new MailboxAddress("email", _emailConfig.From));
             emailMessage.To.AddRange(message.To);
             emailMessage.Subject = message.Subject;
-            emailMessage.Body = new TextPart("html")
-
-
-            {
-                Text = $"To set your password, please click the following link: https://localhost:7099/api/OrganizationAuth/ResetPassword?Email=" + message.To[0].Address
-               
-           };
-
             
+             emailMessage.Body = new TextPart("html")
+             {
+                 Text = message.Content
+             };
+
+
+            //Text = $"To set your password, please click the following link: https://localhost:7099/api/OrganizationAuth/GeneratetPassword?Email=" + message.To[0].Address
+
+
+
+
+
             return emailMessage;
         }
+
         private void Send(MimeMessage mailMessage)
         {
             using var client = new SmtpClient();
