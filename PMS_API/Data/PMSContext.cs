@@ -6,6 +6,7 @@ using PMS_API.Models;
 
 namespace PMS_API.Data
 {
+
     public partial class PMSContext : DbContext
     {
         public PMSContext()
@@ -17,11 +18,15 @@ namespace PMS_API.Data
         {
         }
 
+        public virtual DbSet<ApprovedStatus> ApprovedStatuses { get; set; } = null!;
         public virtual DbSet<Department> Departments { get; set; } = null!;
         public virtual DbSet<Designation> Designations { get; set; } = null!;
         public virtual DbSet<EmployeeModule> EmployeeModules { get; set; } = null!;
         public virtual DbSet<GoalModule> GoalModules { get; set; } = null!;
+        public virtual DbSet<ManagersTbl> ManagersTbls { get; set; } = null!;
         public virtual DbSet<Potential> Potentials { get; set; } = null!;
+        public virtual DbSet<RequestForApproved> RequestForApproveds { get; set; } = null!;
+        public virtual DbSet<ResponseMail> ResponseMails { get; set; } = null!;
         public virtual DbSet<Role> Roles { get; set; } = null!;
         public virtual DbSet<Skill> Skills { get; set; } = null!;
         public virtual DbSet<UserLevel> UserLevels { get; set; } = null!;
@@ -38,6 +43,25 @@ namespace PMS_API.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<ApprovedStatus>(entity =>
+            {
+                entity.HasKey(e => e.ApprovalId)
+                    .HasName("PK__Approved__328477D4E2CF56CF");
+
+                entity.ToTable("ApprovedStatus");
+
+                entity.Property(e => e.ApprovalId).HasColumnName("ApprovalID");
+
+                entity.Property(e => e.IActive).HasColumnName("IActive");
+
+                entity.Property(e => e.ReqId).HasColumnName("ReqID");
+
+                entity.HasOne(d => d.Req)
+                    .WithMany(p => p.ApprovedStatuses)
+                    .HasForeignKey(d => d.ReqId)
+                    .HasConstraintName("FK__ApprovedS__ReqID__6754599E");
+            });
+
             modelBuilder.Entity<Department>(entity =>
             {
                 entity.ToTable("Department");
@@ -87,10 +111,20 @@ namespace PMS_API.Data
                     .HasForeignKey(d => d.DesignationId)
                     .HasConstraintName("FK__EmployeeM__Desig__4D94879B");
 
+                entity.HasOne(d => d.FirstLevelReportingManagerNavigation)
+                    .WithMany(p => p.EmployeeModuleFirstLevelReportingManagerNavigations)
+                    .HasForeignKey(d => d.FirstLevelReportingManager)
+                    .HasConstraintName("FK__EmployeeM__First__5EBF139D");
+
                 entity.HasOne(d => d.Role)
                     .WithMany(p => p.EmployeeModules)
                     .HasForeignKey(d => d.RoleId)
                     .HasConstraintName("FK__EmployeeM__RoleI__4E88ABD4");
+
+                entity.HasOne(d => d.SecondLevelReportingManagerNavigation)
+                    .WithMany(p => p.EmployeeModuleSecondLevelReportingManagerNavigations)
+                    .HasForeignKey(d => d.SecondLevelReportingManager)
+                    .HasConstraintName("FK__EmployeeM__Secon__5FB337D6");
             });
 
             modelBuilder.Entity<GoalModule>(entity =>
@@ -104,6 +138,8 @@ namespace PMS_API.Data
 
                 entity.Property(e => e.DueDate).HasColumnType("date");
 
+                entity.Property(e => e.ModifyAt).HasColumnType("datetime");
+
                 entity.Property(e => e.StartDate).HasColumnType("date");
 
                 entity.HasOne(d => d.Employee)
@@ -112,9 +148,84 @@ namespace PMS_API.Data
                     .HasConstraintName("FK__GoalModul__Emplo__5AEE82B9");
             });
 
+            modelBuilder.Entity<ManagersTbl>(entity =>
+            {
+                entity.HasKey(e => e.ManagerId)
+                    .HasName("PK__Managers__3BA2AA8135F86391");
+
+                entity.ToTable("Managers_tbl");
+
+                entity.Property(e => e.ManagerId).HasColumnName("ManagerID");
+
+                entity.Property(e => e.ContactNumber).HasMaxLength(100);
+
+                entity.HasOne(d => d.Employee)
+                    .WithMany(p => p.ManagersTbls)
+                    .HasForeignKey(d => d.EmployeeId)
+                    .HasConstraintName("FK__Managers___Emplo__60A75C0F");
+            });
+
             modelBuilder.Entity<Potential>(entity =>
             {
                 entity.ToTable("Potential");
+            });
+
+            modelBuilder.Entity<RequestForApproved>(entity =>
+            {
+                entity.HasKey(e => e.ReqId)
+                    .HasName("PK__RequestF__28A9A3A2A398B24B");
+
+                entity.ToTable("RequestForApproved");
+
+                entity.Property(e => e.ReqId).HasColumnName("ReqID");
+
+                entity.Property(e => e.ModifiedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.RequestCreatedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.RequestCreatedById).HasColumnName("RequestCreatedByID");
+
+                entity.HasOne(d => d.Employee)
+                    .WithMany(p => p.RequestForApproveds)
+                    .HasForeignKey(d => d.EmployeeId)
+                    .HasConstraintName("FK__RequestFo__Emplo__6383C8BA");
+
+                entity.HasOne(d => d.RequestCreatedByNavigation)
+                    .WithMany(p => p.RequestForApproveds)
+                    .HasForeignKey(d => d.RequestCreatedById)
+                    .HasConstraintName("FK__RequestFo__Reque__6477ECF3");
+            });
+
+            modelBuilder.Entity<ResponseMail>(entity =>
+            {
+                entity.HasKey(e => e.ResId)
+                    .HasName("PK__Response__29788216DFD29A07");
+
+                entity.ToTable("ResponseMail");
+
+                entity.Property(e => e.ResId).HasColumnName("ResID");
+
+                entity.Property(e => e.ApprovalId).HasColumnName("ApprovalID");
+
+                entity.Property(e => e.DeliverdAt).HasColumnType("datetime");
+
+                entity.Property(e => e.MailCc).HasColumnName("Mail_CC");
+
+                entity.Property(e => e.MailFrom).HasColumnName("Mail_From");
+
+                entity.Property(e => e.MailTo).HasColumnName("Mail_TO");
+
+                entity.Property(e => e.ReqId).HasColumnName("ReqID");
+
+                entity.HasOne(d => d.Approval)
+                    .WithMany(p => p.ResponseMails)
+                    .HasForeignKey(d => d.ApprovalId)
+                    .HasConstraintName("FK__ResponseM__Appro__6B24EA82");
+
+                entity.HasOne(d => d.Req)
+                    .WithMany(p => p.ResponseMails)
+                    .HasForeignKey(d => d.ReqId)
+                    .HasConstraintName("FK__ResponseM__ReqID__6A30C649");
             });
 
             modelBuilder.Entity<Role>(entity =>

@@ -16,15 +16,19 @@ namespace PMS_API.Services
     {
 
         private readonly PMSContext _context;
-        public OrganizationService(PMSContext context)
+        private readonly IEmailService _emailservice;
+        public OrganizationService(PMSContext context , IEmailService emailService)
         {
             _context = context;
+            _emailservice = emailService;   
         }
 
         public int? AddEmployee(EmployeeVM model)
         {
 
             EmployeeModule module = new EmployeeModule();
+            ManagersTbl managersTbl= new ManagersTbl();
+
 
 
             var existingUser = _context.EmployeeModules.FirstOrDefault(x => x.Email == model.Email);
@@ -53,6 +57,19 @@ namespace PMS_API.Services
 
                 _context.EmployeeModules.Add(module);
                 _context.SaveChanges();
+                if(module.DesignationId == 2005)
+                {
+                    managersTbl.EmployeeId = module.EmployeeId;
+                    managersTbl.ManagerName = module.Name;
+                    managersTbl.Email= module.Email;
+                    managersTbl.ContactNumber = module.WorkPhoneNumber;
+                    managersTbl.IsDeleted = false;  
+                    managersTbl.IsActivated = true;
+                    _context.ManagersTbls.Add(managersTbl); 
+                    _context.SaveChanges();
+                    
+                }
+
                 return module.EmployeeId;
             }
             else
@@ -273,6 +290,67 @@ namespace PMS_API.Services
             {
                 throw ex;
             }
+        }
+
+
+        public string ReqForUpdateLvl(UserLevelVM level)
+        {
+            var user = _context.EmployeeModules.Where(x => x.EmployeeId.Equals(level.EmployeeId) && x.IsDeleted.Equals(false)).FirstOrDefault();
+
+            if (user != null)
+            {
+                var data = from emp in _context.EmployeeModules
+                           join man in _context.ManagersTbls
+                           on emp.SecondLevelReportingManager equals man.ManagerId
+
+                           where emp.EmployeeId == level.EmployeeId && emp.IsDeleted != true
+                           select new { emp, man };
+
+                var mail = data.FirstOrDefault();
+
+                
+
+                 RequestForApproved request = new RequestForApproved();
+
+                    request.EmployeeId = level.EmployeeId;
+                    request.RequestCreatedById = null;
+                    request.RequestCreatedBy = null;
+                    request.RequestCreatedAt = DateTime.Now;
+                    request.Reason = level.Reason;
+                    request.Comments = level.Description;
+                    request.IsActivated = true;
+                   request.IsDeliverd= false;
+
+                    _context.RequestForApproveds.Add(request);
+                    _context.SaveChanges();
+                
+
+                var msg = "(Req_ID "+request.ReqId+".)"+" "+"</br>"+"Hi " + mail.man.ManagerName + " I Would Like To Improve " + user.Name + "'s SkillLevel to Next Level For " +"Reason:"+"</br>"+ "<h3>" + level.Reason + "Descriptions:" +"</br>" + "<h3>" + "  " + level.Description + " Kindly Approve This"+"</br>" + "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
+                var message = new Message(new string[] { mail.man.Email }, "Requst For Level Update", msg.ToString());
+                var a = _emailservice.SendEmail(message);
+
+                if(a == "ok")
+                {
+                    var abc = _context.RequestForApproveds.Where(x => x.ReqId == request.ReqId).FirstOrDefault();
+
+                    abc.IsDeliverd = true;
+                    _context.RequestForApproveds.Update(abc);
+                    _context.SaveChanges();
+                }
+
+                return "Ok";
+            }
+            return "Error";
+        }
+
+        public string LevlelApprovedSuccess(int reqid, bool status)
+        {
+
+            var user = _context.RequestForApproveds.Where( x => x.ReqId==reqid).FirstOrDefault();
+            
+            
+
+            return " ";
         }
 
         public string UpdateLevelForEmployee(UserLevelVM level)

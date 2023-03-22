@@ -280,6 +280,43 @@ namespace PMS_API.Controllers
             new ResponseStatus { status = "Error", message = "Invalid Datas" });
         }
 
+        [HttpPut]
+        [Route("ReqForUpdateLvl")]
+        public async Task<IActionResult> ReqForUpdateLvl(UserLevelVM level)
+        {
+            if (ModelState.IsValid)
+            {
+                var a = repository.ReqForUpdateLvl(level);
+
+                switch (a)
+                {
+                    case "Ok":
+                        return StatusCode(StatusCodes.Status102Processing,
+                            new ResponseStatus { status = "Success", message = "Your Update Request Send Successfully" });
+                    case "Error":
+                        return StatusCode(StatusCodes.Status404NotFound,
+                            new ResponseStatus { status = "Error", message = "User Not Exsist" });
+                }
+            
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+                             new ResponseStatus { status = "Error", message = "Invalid datas" });
+        }
+
+
+        [HttpPost]
+        [Route("LevlelApprovedSuccess")]
+        public async Task<IActionResult> LevlelApprovedSuccess( int reqid, bool status)
+        {
+            if(ModelState.IsValid) 
+            {
+                var approved = repository.LevlelApprovedSuccess(reqid, status);
+            }
+           
+
+            return Ok();
+        }
+
 
 
         [HttpPut]
@@ -474,15 +511,15 @@ namespace PMS_API.Controllers
             return Ok(emplist);
         }
 
-        [HttpGet]
-        [Route("LevelupManager")]
-        //[Authorize(Roles = "Admin")]
-        public async Task<IActionResult> ApproveEmail([FromQuery] bool IsReject,int EmployeeId, int SkillId)
-        {
+        //[HttpGet]
+        //[Route("LevelupManager")]
+        ////[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> ApproveEmail([FromQuery] bool IsReject,int EmployeeId, int SkillId)
+        //{
             
 
-            return Ok();
-        }
+        //    return Ok();
+        //}
     }
 }
 
