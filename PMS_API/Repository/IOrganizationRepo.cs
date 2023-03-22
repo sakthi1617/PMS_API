@@ -27,6 +27,8 @@ namespace PMS_API.Repository
         public void AddSkillWeightage(WeightageVM weightage);
         public List<Designation> DesignationModule();
         public string DeleteEmployee(int EmployeeId);
+        public string ReqForUpdateLvl(UserLevelVM level);
+        public string LevlelApprovedSuccess(int reqid, bool status);
         public string UpdateLevelForEmployee(UserLevelVM level);
         public string DeleteSkillbyEmp(int EmployeeId, int SkillId);
         public dynamic FindRequiredEmployee(FindEmployee find);

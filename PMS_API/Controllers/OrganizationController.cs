@@ -45,9 +45,8 @@ namespace PMS_API.Controllers
                     var userLevelResult = repository.AddUserLevel(employeeModule.DesignationId, employeeModule.DepartmentId, employeeCreationResult);
                     if (userLevelResult == "Created")
                     {
-                        var msg = " Hi " + employeeModule.Name + "your Account created Succesfully";
+                        var msg = " Hi " + employeeModule.Name + "" + "your Account created Succesfully To set your password, please click the following link: https://localhost:7099/api/OrganizationAuth/ResetPassword?Email= "+employeeModule.Email;
                         var message = new Message(new string[] { employeeModule.Email }, "Welcome To PMS", msg.ToString());
-
                         _emailservice.SendEmail(message);
 
                         return StatusCode(StatusCodes.Status201Created,
@@ -281,6 +280,43 @@ namespace PMS_API.Controllers
             new ResponseStatus { status = "Error", message = "Invalid Datas" });
         }
 
+        [HttpPut]
+        [Route("ReqForUpdateLvl")]
+        public async Task<IActionResult> ReqForUpdateLvl(UserLevelVM level)
+        {
+            if (ModelState.IsValid)
+            {
+                var a = repository.ReqForUpdateLvl(level);
+
+                switch (a)
+                {
+                    case "Ok":
+                        return StatusCode(StatusCodes.Status102Processing,
+                            new ResponseStatus { status = "Success", message = "Your Update Request Send Successfully" });
+                    case "Error":
+                        return StatusCode(StatusCodes.Status404NotFound,
+                            new ResponseStatus { status = "Error", message = "User Not Exsist" });
+                }
+            
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+                             new ResponseStatus { status = "Error", message = "Invalid datas" });
+        }
+
+
+        [HttpPost]
+        [Route("LevlelApprovedSuccess")]
+        public async Task<IActionResult> LevlelApprovedSuccess( int reqid, bool status)
+        {
+            if(ModelState.IsValid) 
+            {
+                var approved = repository.LevlelApprovedSuccess(reqid, status);
+            }
+           
+
+            return Ok();
+        }
+
 
 
         [HttpPut]
@@ -474,6 +510,16 @@ namespace PMS_API.Controllers
 
             return Ok(emplist);
         }
+
+        //[HttpGet]
+        //[Route("LevelupManager")]
+        ////[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> ApproveEmail([FromQuery] bool IsReject,int EmployeeId, int SkillId)
+        //{
+            
+
+        //    return Ok();
+        //}
     }
 }
 
