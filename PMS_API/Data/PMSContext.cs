@@ -52,7 +52,7 @@ namespace PMS_API.Data
 
                 entity.Property(e => e.ApprovalId).HasColumnName("ApprovalID");
 
-                entity.Property(e => e.Iactive).HasColumnName("IActive");
+                entity.Property(e => e.IActive).HasColumnName("IActive");
 
                 entity.Property(e => e.ReqId).HasColumnName("ReqID");
 

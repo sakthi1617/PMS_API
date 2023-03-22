@@ -287,9 +287,37 @@ namespace PMS_API.Controllers
             if (ModelState.IsValid)
             {
                 var a = repository.ReqForUpdateLvl(level);
+
+                switch (a)
+                {
+                    case "Ok":
+                        return StatusCode(StatusCodes.Status102Processing,
+                            new ResponseStatus { status = "Success", message = "Your Update Request Send Successfully" });
+                    case "Error":
+                        return StatusCode(StatusCodes.Status404NotFound,
+                            new ResponseStatus { status = "Error", message = "User Not Exsist" });
+                }
+            
             }
+            return StatusCode(StatusCodes.Status400BadRequest,
+                             new ResponseStatus { status = "Error", message = "Invalid datas" });
+        }
+
+
+        [HttpPost]
+        [Route("LevlelApprovedSuccess")]
+        public async Task<IActionResult> LevlelApprovedSuccess( int reqid, bool status)
+        {
+            if(ModelState.IsValid) 
+            {
+                var approved = repository.LevlelApprovedSuccess(reqid, status);
+            }
+           
+
             return Ok();
         }
+
+
 
         [HttpPut]
         [Route("UpdateLevelForEmployee")]

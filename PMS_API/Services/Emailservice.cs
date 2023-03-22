@@ -14,10 +14,16 @@ namespace PMS_API.Services
             _emailConfig = emailConfig;
         }
 
-        public void SendEmail(Message message)
+        public string SendEmail(Message message)
         {
             var emailMessage = CreateEmailMessage(message);
-            Send(emailMessage);
+            var a = Send(emailMessage);
+            if(a == "MailSend")
+            {
+                return "ok";
+            }
+
+            return "Error";
         }
 
         private MimeMessage CreateEmailMessage(Message message)
@@ -43,21 +49,26 @@ namespace PMS_API.Services
             return emailMessage;
         }
 
-        private void Send(MimeMessage mailMessage)
+        private string Send(MimeMessage mailMessage)
         {
+             
             using var client = new SmtpClient();
             try
             {
                 client.Connect(_emailConfig.SmtpServer, _emailConfig.Port, true);
                 client.AuthenticationMechanisms.Remove("XOAUTH2");
                 client.Authenticate(_emailConfig.userName, _emailConfig.Password);
-
-                client.Send(mailMessage);
+                var res = client.Send(mailMessage);                   
+               
+               
+                return "MailSend";
             }
             catch (Exception ex)
             {
                 throw ex;
             }
+
+           
         }
 
 
