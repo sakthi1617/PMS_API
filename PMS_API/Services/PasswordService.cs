@@ -40,6 +40,32 @@ namespace PMS_API.Services
 
         }
 
+        public string Forgetpassword(string Email, ResetPassword request)
+        {
+
+            var user = _context.EmployeeModules.FirstOrDefault(u => u.Email == Email);
+            if (user == null)
+            {
+                return "Please Try Again";
+            }
+            if (user.IsActivated == true)
+            {
+                HashPassword(request.NewPassword, out byte[] passwordHash, out byte[] passwordSalt);
+                user.PasswordHash = passwordHash;
+                user.PasswordSalt = passwordSalt;
+                user.IsActivated = true;
+                _context.EmployeeModules.Update(user);
+                _context.SaveChanges();
+                return "Your Password Generate Successfully";
+            }
+            else
+            {
+                return "Your Account has Deactivated";
+            }
+
+        }
+
+
         public void HashPassword(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             using (var hmac = new HMACSHA512())
