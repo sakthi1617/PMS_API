@@ -7,7 +7,11 @@
         public int? Level { get; set; }
         public int? Weightage { get; set; }
 
-        public string Reason { get; set; }
-        public string Description { get; set; }
+        public string? Reason { get; set; }
+        public string? Description { get; set; }    
+
+
+
     }
+
 }
