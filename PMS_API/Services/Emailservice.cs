@@ -34,20 +34,35 @@ namespace PMS_API.Services
             emailMessage.To.AddRange(message.To);
             emailMessage.Subject = message.Subject;
             
-             emailMessage.Body = new TextPart("html")
-             {
-                 Text = message.Content
-             };
+            //emailMessage.Body = new TextPart("html")
+            //{
+            //    Text = message.Content
+            //};
 
+           // var bodyBuilder = new BodyBuilder { HtmlBody = string.Format("<h2 style='color:red;'>{0}</h2>", message.Content) };
 
             //Text = $"To set your password, please click the following link: https://localhost:7099/api/OrganizationAuth/GeneratetPassword?Email=" + message.To[0].Address
 
-
-
-
+            var bodyBuilder = new BodyBuilder { HtmlBody = string.Format("<h2 style='color:red;'>{0}</h2>", message.Content) };
+            if (message.Attachments != null && message.Attachments.Any())
+            {
+                byte[] fileBytes;
+                foreach (var attachment in message.Attachments)
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        attachment.CopyTo(ms);
+                        fileBytes = ms.ToArray();
+                    }
+                    bodyBuilder.Attachments.Add(attachment.FileName, fileBytes, ContentType.Parse(attachment.ContentType));
+                }
+            }
+            emailMessage.Body = bodyBuilder.ToMessageBody();
+           
 
             return emailMessage;
         }
+
 
         private string Send(MimeMessage mailMessage)
         {
@@ -67,8 +82,13 @@ namespace PMS_API.Services
             {
                 throw ex;
             }
+            finally
+            {
+                client.Disconnect(true);
+                client.Dispose();
+            }
 
-           
+
         }
 
 

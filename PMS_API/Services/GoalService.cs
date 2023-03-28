@@ -1,4 +1,5 @@
-﻿using PMS_API.Data;
+﻿using Org.BouncyCastle.Asn1.Ocsp;
+using PMS_API.Data;
 using PMS_API.Models;
 using PMS_API.Repository;
 using PMS_API.SupportModel;
@@ -103,9 +104,9 @@ namespace PMS_API.Services
         public string SendMailToEmployee(GoalVM model)
         {
             var data = _context.EmployeeModules.Where(x => x.EmployeeId == model.EmployeeId).FirstOrDefault();
-
+            var files =  new FormFileCollection();
             var msg = " Hi " + data.Name + "This Is a Friendly reminder that the Goals has been assigned to you . if you have any question , please don't hesitate to approch.";
-            var message = new Message(new string[] { data.Email }, "Notification of goal submission", msg.ToString());
+            var message = new Message(new string[] { data.Email }, "Notification of goal submission", msg.ToString(), null);
 
             emailService.SendEmail(message);
             return "ok";
