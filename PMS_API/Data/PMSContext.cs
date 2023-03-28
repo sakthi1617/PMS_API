@@ -32,6 +32,8 @@ namespace PMS_API.Data
         public virtual DbSet<UserLevel> UserLevels { get; set; } = null!;
         public virtual DbSet<Weightage> Weightages { get; set; } = null!;
 
+        public virtual DbSet<ResponseEmail> ResponseEmails { get; set; } = null!;
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -194,6 +196,29 @@ namespace PMS_API.Data
                     .WithMany(p => p.RequestForApproveds)
                     .HasForeignKey(d => d.RequestCreatedById)
                     .HasConstraintName("FK__RequestFo__Reque__6477ECF3");
+            });
+
+            modelBuilder.Entity<ResponseEmail>(entity =>
+            {
+                entity.HasKey(e => e.ResponseId)
+                    .HasName("PK__Response__1AAA640CC9484037");
+
+                entity.ToTable("Response_Email");
+
+                entity.Property(e => e.ResponseId).HasColumnName("ResponseID");
+
+                entity.Property(e => e.DeliverdAt).HasColumnType("datetime");
+
+                entity.Property(e => e.NotifiedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.ReqId).HasColumnName("ReqID");
+
+                entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Req)
+                    .WithMany(p => p.ResponseEmails)
+                    .HasForeignKey(d => d.ReqId)
+                    .HasConstraintName("FK__Response___ReqID__160F4887");
             });
 
             modelBuilder.Entity<ResponseMail>(entity =>

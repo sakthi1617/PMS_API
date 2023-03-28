@@ -1,6 +1,9 @@
-﻿using PMS_API.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata;
+using PMS_API.Models;
 using PMS_API.SupportModel;
 using PMS_API.ViewModels;
+using System.Net.Mail;
 
 namespace PMS_API.Repository
 {
@@ -27,11 +30,17 @@ namespace PMS_API.Repository
         public void AddSkillWeightage(WeightageVM weightage);
         public List<Designation> DesignationModule();
         public string DeleteEmployee(int EmployeeId);
-        public string ReqForUpdateLvl(UserLevelVM level);
+        public dynamic ReqForUpdateLvl(int EmpID, int SklID, string descrip, string rea, IFormFileCollection fiels);
         public string LevlelApprovedSuccess(int reqid, bool status);
+
+        public void EmailDelivery();
+
         public string UpdateLevelForEmployee(UserLevelVM level);
         public string DeleteSkillbyEmp(int EmployeeId, int SkillId);
         public dynamic FindRequiredEmployee(FindEmployee find);
+        public dynamic UserLevelDecrement(int Employeeid, int skillId);
+
+       // public Task SaveFileAsync(ControllerBase controllerl);
         public void Save();
     }
 }

@@ -5,6 +5,7 @@
         public RequestForApproved()
         {
             ApprovedStatuses = new HashSet<ApprovedStatus>();
+            ResponseEmails = new HashSet<ResponseEmail>();
             ResponseMails = new HashSet<ResponseMail>();
         }
 
@@ -20,6 +21,7 @@
         public DateTime? ModifiedAt { get; set; }
         public bool? IsActivated { get; set; }
         public bool? IsDeliverd { get; set; }
+       
 
 
 
@@ -27,6 +29,8 @@
         public virtual EmployeeModule? Employee { get; set; }
         public virtual ManagersTbl? RequestCreatedByNavigation { get; set; }
         public virtual ICollection<ApprovedStatus> ApprovedStatuses { get; set; }
+
+        public virtual ICollection<ResponseEmail> ResponseEmails { get; set; }
         public virtual ICollection<ResponseMail> ResponseMails { get; set; }
     }
 }

@@ -1,12 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Hangfire;
+using Hangfire.Common;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
+using Org.BouncyCastle.Asn1.Ocsp;
 using PMS_API.Data;
 using PMS_API.Models;
 using PMS_API.Repository;
 using PMS_API.SupportModel;
 using PMS_API.ViewModels;
 using System.Linq;
+using System.Net.Mail;
 using System.Runtime.Intrinsics.Arm;
 
 namespace PMS_API.Services
@@ -17,17 +21,17 @@ namespace PMS_API.Services
 
         private readonly PMSContext _context;
         private readonly IEmailService _emailservice;
-        public OrganizationService(PMSContext context , IEmailService emailService)
+        public OrganizationService(PMSContext context, IEmailService emailService)
         {
             _context = context;
-            _emailservice = emailService;   
+            _emailservice = emailService;
         }
 
         public int? AddEmployee(EmployeeVM model)
         {
 
             EmployeeModule module = new EmployeeModule();
-            ManagersTbl managersTbl= new ManagersTbl();
+            ManagersTbl managersTbl = new ManagersTbl();
 
 
 
@@ -57,20 +61,22 @@ namespace PMS_API.Services
 
                 _context.EmployeeModules.Add(module);
                 _context.SaveChanges();
-                if(module.DesignationId == 2005)
+                if (module.DesignationId == 2005)
                 {
                     managersTbl.EmployeeId = module.EmployeeId;
                     managersTbl.ManagerName = module.Name;
-                    managersTbl.Email= module.Email;
+                    managersTbl.Email = module.Email;
                     managersTbl.ContactNumber = module.WorkPhoneNumber;
-                    managersTbl.IsDeleted = false;  
+                    managersTbl.IsDeleted = false;
                     managersTbl.IsActivated = true;
-                    _context.ManagersTbls.Add(managersTbl); 
+                    _context.ManagersTbls.Add(managersTbl);
                     _context.SaveChanges();
-                    
+
                 }
 
-                return module.EmployeeId;
+                 return module.EmployeeId;
+            
+
             }
             else
             {
@@ -129,9 +135,9 @@ namespace PMS_API.Services
 
         public string AddAdditionalSkills(UserLevelVM level)
         {
-           
+
             var users = _context.EmployeeModules.Where(x => x.EmployeeId == level.EmployeeId && x.IsDeleted != true).FirstOrDefault();
-            if(users != null)
+            if (users != null)
             {
                 var lvl = _context.UserLevels.Where(x => x.SkillId == level.SkillId && x.EmployeeId == level.EmployeeId).FirstOrDefault();
                 if (lvl != null)
@@ -150,7 +156,7 @@ namespace PMS_API.Services
                 return "Success";
             }
             return "User Not exists";
-          
+
         }
 
         public void AddSkillWeightage(WeightageVM weightage)
@@ -169,41 +175,41 @@ namespace PMS_API.Services
         {
             try
             {
-               // var existingUser = _context.EmployeeModules.FirstOrDefault(x => x.Email == model.Email);
+                // var existingUser = _context.EmployeeModules.FirstOrDefault(x => x.Email == model.Email);
                 //if (existingUser == null)
                 //{
-                    var Emp = _context.EmployeeModules.Where(s => s.EmployeeId == id && s.IsDeleted != true).FirstOrDefault();
-                    if (Emp != null)
-                    {
-                        Emp.Name = model.Name;
-                        Emp.Email = model.Email;
-                        Emp.DepartmentId = model.DepartmentId;
-                        Emp.DesignationId = model.DesignationId;
-                        Emp.RoleId = model.RoleId;
-                        Emp.DateOfJoining = model.DateOfJoining;
-                        Emp.PriviousExperience = model.PriviousExperience;
-                        Emp.FirstLevelReportingManager = model.FirstLevelReportingManager;
-                        Emp.SecondLevelReportingManager = model.SecondLevelReportingManager;
-                        Emp.DateOfBirth = model.DateOfBirth;
-                        Emp.Age = model.Age;
-                        Emp.Gender = model.Gender;
-                        Emp.MaritalStatus = model.MaritalStatus;
-                        Emp.WorkPhoneNumber = model.WorkPhoneNumber;
-                        Emp.PersonalPhone = model.PersonalPhone;
-                        Emp.PersonalEmail = model.PersonalEmail;
-                        Emp.ProfilePicture = model.ProfilePicture;
-                        Emp.ModifiedTime = DateTime.Now;
+                var Emp = _context.EmployeeModules.Where(s => s.EmployeeId == id && s.IsDeleted != true).FirstOrDefault();
+                if (Emp != null)
+                {
+                    Emp.Name = model.Name;
+                    Emp.Email = model.Email;
+                    Emp.DepartmentId = model.DepartmentId;
+                    Emp.DesignationId = model.DesignationId;
+                    Emp.RoleId = model.RoleId;
+                    Emp.DateOfJoining = model.DateOfJoining;
+                    Emp.PriviousExperience = model.PriviousExperience;
+                    Emp.FirstLevelReportingManager = model.FirstLevelReportingManager;
+                    Emp.SecondLevelReportingManager = model.SecondLevelReportingManager;
+                    Emp.DateOfBirth = model.DateOfBirth;
+                    Emp.Age = model.Age;
+                    Emp.Gender = model.Gender;
+                    Emp.MaritalStatus = model.MaritalStatus;
+                    Emp.WorkPhoneNumber = model.WorkPhoneNumber;
+                    Emp.PersonalPhone = model.PersonalPhone;
+                    Emp.PersonalEmail = model.PersonalEmail;
+                    Emp.ProfilePicture = model.ProfilePicture;
+                    Emp.ModifiedTime = DateTime.Now;
 
-                        _context.EmployeeModules.Update(Emp);
-                        _context.SaveChanges();
+                    _context.EmployeeModules.Update(Emp);
+                    _context.SaveChanges();
 
 
-                        return "Updated";
-                    }
-                    else
-                    {
-                        return "User Not Exists";
-                    }
+                    return "Updated";
+                }
+                else
+                {
+                    return "User Not Exists";
+                }
                 //}
                 //else
                 //{
@@ -293,47 +299,76 @@ namespace PMS_API.Services
         }
 
 
-        public string ReqForUpdateLvl(UserLevelVM level)
+        public dynamic ReqForUpdateLvl(int EmpID, int SklID, string descrip, string rea, IFormFileCollection fiels)
         {
-            var user = _context.EmployeeModules.Where(x => x.EmployeeId.Equals(level.EmployeeId) && x.IsDeleted.Equals(false)).FirstOrDefault();
+            var userlevel = _context.UserLevels.Where(x =>x.SkillId == SklID && x.EmployeeId==EmpID).FirstOrDefault();
+            if(userlevel.Level >= 4)
+            {
+                return "MaxLevel";
+            }
+            //EmailDelivery();
+             var user = _context.EmployeeModules.Where(x => x.EmployeeId.Equals(EmpID) && x.IsDeleted.Equals(false)).FirstOrDefault();//--------------------
 
             if (user != null)
             {
                 var data = from emp in _context.EmployeeModules
                            join man in _context.ManagersTbls
-                           on emp.SecondLevelReportingManager equals man.ManagerId
+                           on emp.FirstLevelReportingManager equals man.ManagerId
 
-                           where emp.EmployeeId == level.EmployeeId && emp.IsDeleted != true
+                           where emp.EmployeeId == EmpID && emp.IsDeleted != true //------------------
                            select new { emp, man };
 
-                var mail = data.FirstOrDefault();
+                var Data = from emp in _context.EmployeeModules
+                           join man in _context.ManagersTbls
+                           on emp.SecondLevelReportingManager equals man.ManagerId
 
+                           where emp.EmployeeId == EmpID && emp.IsDeleted != true  //---------------------
+                           select new { emp, man };
+
+                var first = data.FirstOrDefault();
+                var second = Data.FirstOrDefault();
+
+
+                RequestForApproved request = new RequestForApproved();
+
+                //request.EmployeeId = level.EmployeeId;
+                request.EmployeeId = EmpID;
+                request.RequestCreatedById = first.man.ManagerId;
+                request.RequestCreatedBy = first.man.ManagerName;
+                request.RequestCreatedAt = DateTime.Now;
+               // request.Reason = level.Reason;
+                request.Reason = rea;
+               // request.Comments = level.Description;
+                request.Comments = descrip;
+                request.IsActivated = true;
+                request.IsDeliverd = false;
+               // request.Skillid= level.SkillId;
+                request.Skillid= SklID;
+                
+                _context.RequestForApproveds.Add(request);
+                _context.SaveChanges();
+                
                 
 
-                 RequestForApproved request = new RequestForApproved();
-
-                    request.EmployeeId = level.EmployeeId;
-                    request.RequestCreatedById = null;
-                    request.RequestCreatedBy = null;
-                    request.RequestCreatedAt = DateTime.Now;
-                    request.Reason = level.Reason;
-                    request.Comments = level.Description;
-                    request.IsActivated = true;
-                   request.IsDeliverd= false;
-
-                    _context.RequestForApproveds.Add(request);
-                    _context.SaveChanges();
-                
-
-                var msg = "(Req_ID "+request.ReqId+".)"+" "+"</br>"+"Hi " + mail.man.ManagerName + " I Would Like To Improve " + user.Name + "'s SkillLevel to Next Level For " +"Reason:"+"</br>"+ "<h3>" + level.Reason + "Descriptions:" +"</br>" + "<h3>" + "  " + level.Description + " Kindly Approve This"+"</br>" + "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
-                var message = new Message(new string[] { mail.man.Email }, "Requst For Level Update", msg.ToString());
+                // var files =  new FormFileCollection();
+                 //var files = Request.Form.Files.Any() ? Request.Form.Files : new FormFileCollection();//-----------------------------------------------------------------------
+                var msg = "(Req_ID " + request.ReqId + ".)" + " " + "</br>" + "Hi " + second.man.ManagerName + " I Would Like To Improve " + user.Name + "'s SkillLevel to Next Level For " + "Reason:" + "</br>" + "<h3>" + rea + "Descriptions:" + "</br>" + "<h3>" + "  " + descrip + " Kindly Approve This" + "</br>" + "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
+                var message = new Message(new string[] { second.man.Email }, "Requst For Level Update", msg.ToString(), fiels);
                 var a = _emailservice.SendEmail(message);
 
-                if(a == "ok")
+                if (a == "ok")
                 {
                     var abc = _context.RequestForApproveds.Where(x => x.ReqId == request.ReqId).FirstOrDefault();
 
-                    abc.IsDeliverd = true;
+                      abc.IsDeliverd = true;
+                     _context.RequestForApproveds.Update(abc);
+                     _context.SaveChanges();
+                }
+                else
+                {
+                    var abc = _context.RequestForApproveds.Where(x => x.ReqId == request.ReqId).FirstOrDefault();
+
+                    abc.IsActivated = false;
                     _context.RequestForApproveds.Update(abc);
                     _context.SaveChanges();
                 }
@@ -345,12 +380,150 @@ namespace PMS_API.Services
 
         public string LevlelApprovedSuccess(int reqid, bool status)
         {
-
-            var user = _context.RequestForApproveds.Where( x => x.ReqId==reqid).FirstOrDefault();
-            
             
 
-            return " ";
+
+            var user = _context.RequestForApproveds.Where(x => x.ReqId == reqid && x.IsActivated == true).FirstOrDefault();
+            if(user != null)
+            {
+                var mail1 = from emp in _context.EmployeeModules
+                           join man in _context.ManagersTbls
+                           on emp.FirstLevelReportingManager  equals man.ManagerId
+                           where emp.EmployeeId == user.EmployeeId
+                           select new { emp, man };
+
+                var mail2 = from emp in _context.EmployeeModules
+                           join man in _context.ManagersTbls
+                           on emp.SecondLevelReportingManager  equals man.ManagerId
+                           where emp.EmployeeId == user.EmployeeId
+                           select new { emp, man };
+
+                var skillname = _context.Skills.Where(x => x.SkillId == user.Skillid).FirstOrDefault();
+                var a = mail1.FirstOrDefault();
+                var b = mail2.FirstOrDefault();
+
+                if(a != null)
+                {
+                    ResponseEmail email = new ResponseEmail();  
+
+                    email.ReqId= reqid;
+                    email.Status= status;
+                    email.FirstlvlManagerMail = a.man.Email;
+                    email.SecondlvlManagerMail = a.man.Email;
+                    email.Employeemail= a.emp.Email;
+                    email.IsDeliverd = false;
+                    email.IsNotified= false;
+                    email.IsUpdated= false;
+                    email.IsActive = true;
+                    email.Skillid= user.Skillid;
+                    email.SkillName= skillname.SkillName;
+                    email.FirstLvlManagerName = a.man.ManagerName;
+                    email.SecondlvlManagerName= b.man.ManagerName;
+                    email.EmployeeID = user.EmployeeId;
+                    email.Employeename = a.emp.Name;
+                    _context.ResponseEmails.Add(email);
+                    _context.SaveChanges();
+
+                   
+                    return "Ok";
+                }
+                else
+                {
+                    return "erorr";
+                }
+              
+            }
+            else
+            {
+                return "RequestExpired";
+            }
+
+           
+        }
+
+
+        public void EmailDelivery()
+        {
+            var job_1 = _context.ResponseEmails.Where(x => x.IsActive == true && x.IsDeliverd== false && x.Status== true).FirstOrDefault();
+            var job_2 = _context.ResponseEmails.Where(x => x.IsActive == true && x.IsDeliverd == false && x.Status == false).FirstOrDefault();
+
+            
+            var job_3 = _context.ResponseEmails.Where(x => x.IsActive == true && x.IsNotified == false && x.Status == true).FirstOrDefault();
+          
+             var job_4 = _context.ResponseEmails.Where(x => x.IsActive == true && x.IsDeliverd == true && x.IsNotified == true).FirstOrDefault();
+             
+           
+
+            if(job_1 != null)
+            {
+               
+                var userlvl = _context.UserLevels.Where(x => x.EmployeeId == job_1.EmployeeID && x.SkillId == job_1.Skillid).FirstOrDefault();
+                var msg = "(Req_ID " + job_1.ResponseId + ".)" + " " + "</br>" + "Hi " + job_1.FirstLvlManagerName + " Your Update Request(" + job_1.ReqId + ") has Approved";
+                var message = new Message(new string[] { job_1.FirstlvlManagerMail }, "Approval Message", msg.ToString(),null);
+                var a = _emailservice.SendEmail(message);
+                if( a == "ok")
+                {
+                    job_1.IsDeliverd= true;
+                    job_1.DeliverdAt= DateTime.Now;
+                    _context.ResponseEmails.Update(job_1);
+                    _context.SaveChanges();
+                }              
+                if(job_1.IsUpdated == false )
+                {
+                  var b = userlvl.Level+1; 
+                 
+                   userlvl.Level = b;   
+                    job_1.DeliverdAt = DateTime.Now;
+                    job_1.IsUpdated= true;
+                    _context.ResponseEmails.Update(job_1);
+                    _context.SaveChanges();
+                    _context.UserLevels.Update(userlvl); 
+                    _context.SaveChanges();
+                    int? employeeId = job_1.EmployeeID;
+                    //Potential Calculation
+                    PotentialCal(employeeId);
+                }
+            }
+            if(job_2 != null)
+            {
+                
+                var msg = "(Req_ID " + job_2.ResponseId + ".)" + " " + "</br>" + "Hi " + job_2.FirstLvlManagerName + " Your Update Request(" + job_2.ReqId + ") has been Rejected for some Reason";
+                var message = new Message(new string[] { job_2.FirstlvlManagerMail }, "Approval Message", msg.ToString(), null);
+                var a = _emailservice.SendEmail(message);
+                if(a == "ok")
+                { 
+                    job_2.IsDeliverd = true;
+                    job_2.DeliverdAt= DateTime.Now;
+                    job_2.IsNotified= true;
+                    _context.ResponseEmails.Update(job_2);
+                    _context.SaveChanges();
+                }
+
+            }
+            if(job_3 != null)
+            {
+                
+                var msg = " Hi " + job_3.Employeename + " Your Skill Level in " + job_3.SkillName + " To The Next Level By " + job_3.FirstLvlManagerName;
+                var message = new Message(new string[] { job_3.Employeemail }, "Skill Updated", msg.ToString(), null);
+                var a = _emailservice.SendEmail(message);
+                if (a == "ok")
+                {
+                    job_3.IsNotified = true;
+                    job_3.NotifiedAt= DateTime.Now;
+                    _context.ResponseEmails.Update(job_3);
+                    _context.SaveChanges();
+                }
+
+            }
+
+            if(job_4 != null)
+            {
+                job_4.IsActive = false;
+                _context.ResponseEmails.Update(job_4);
+                _context.SaveChanges();
+
+            }
+
         }
 
         public string UpdateLevelForEmployee(UserLevelVM level)
@@ -368,7 +541,7 @@ namespace PMS_API.Services
                 _context.UserLevels.Update(weightages);
                 return "Updated";
             }
-                 
+
             return "Error";
         }
 
@@ -398,7 +571,7 @@ namespace PMS_API.Services
 
         public List<EmployeeModule> EmployeeList()
         {
-
+            EmailDelivery();
             return _context.EmployeeModules.Where(s => s.IsDeleted != true && s.IsActivated != false).ToList();
 
         }
@@ -435,7 +608,7 @@ namespace PMS_API.Services
 
         public IQueryable<GetEmployeeSkillsByIdVM> GetEmployeeSkillsById(int id)
         {
-             //var skill = _context.UserLevels.Where(x => x.EmployeeId.Equals(id)).FirstOrDefault();
+            //var skill = _context.UserLevels.Where(x => x.EmployeeId.Equals(id)).FirstOrDefault();
 
             //var deleted = _context.
 
@@ -447,7 +620,8 @@ namespace PMS_API.Services
                        join dep in _context.Departments
                        on emp.DepartmentId equals dep.DepartmentId
                        join des in _context.Designations
-                       on emp.DesignationId equals des.DesignationId where emp.EmployeeId== id && emp.IsDeleted != true
+                       on emp.DesignationId equals des.DesignationId
+                       where emp.EmployeeId == id && emp.IsDeleted != true
                        select new GetEmployeeSkillsByIdVM
                        {
                            EmployeeId = emp.EmployeeId,
@@ -519,6 +693,74 @@ namespace PMS_API.Services
             return skills.ToList();
         }
 
+        public dynamic UserLevelDecrement(int Employeeid, int skillId)
+        {
+            var userlvl = _context.UserLevels.Where(x => x.EmployeeId == Employeeid && x.SkillId == skillId).FirstOrDefault();
+            if (userlvl != null)
+            {
+                if (userlvl.Level == 0)
+                {
+                    _context.UserLevels.Remove(userlvl);
+                    _context.SaveChanges();
+                    PotentialCal(Employeeid);
+                    return userlvl;
+                  
+                }
+                else
+                {
+                    var decre = userlvl.Level - 1;
+                    userlvl.Level = decre;
+                    _context.UserLevels.Update(userlvl);
+                    _context.SaveChanges();
+                    //var data = _context.EmployeeModules.Where(x => x.EmployeeId==Employeeid).ToList();
+                    PotentialCal(Employeeid);
+
+                    return userlvl;
+                }
+            }
+            return null;
+
+        }
+        public void PotentialCal(int? employeeId)
+        {
+            var UserLevel = _context.UserLevels.Where(x => x.EmployeeId == employeeId).ToList();
+            var employee = _context.EmployeeModules.Where(c => c.EmployeeId == employeeId).FirstOrDefault();
+            decimal WeightedSkillScore = 0;
+            decimal TotalPossibleScore = 0;
+            int SkillPotential = 0;
+            int percent = 0;
+
+            foreach (var item in UserLevel)
+            {
+                if (item.Level == 1)
+                {
+                    percent = 25;
+                }
+                else if (item.Level == 2)
+                {
+                    percent = 50;
+                }
+                else if (item.Level == 3)
+                {
+                    percent = 75;
+                }
+                else if (item.Level == 4)
+                {
+                    percent = 100;
+                }
+                else
+                {
+                    percent = 0;
+                }
+                WeightedSkillScore += Convert.ToDecimal(((item.Weightage * percent)));
+                TotalPossibleScore += Convert.ToDecimal((100 * item.Weightage));
+            }
+            SkillPotential = Convert.ToInt32(((WeightedSkillScore / TotalPossibleScore) * 100));
+            employee.PotentialLevel = SkillPotential;
+            _context.EmployeeModules.Update(employee);
+            _context.SaveChanges();
+            
+        }
         public void Save()
         {
             _context.SaveChanges();
