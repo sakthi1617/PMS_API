@@ -74,7 +74,7 @@ namespace PMS_API.Controllers
                             id = exisitingUser.EmployeeId,
                             role = userRole,
                             status = "Success", 
-                            message = "Login Successfully." ,
+                            message = "Login Successfully.",
                             statusCode = StatusCodes.Status200OK 
 
                         });
