@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Newtonsoft.Json.Schema;
 using Org.BouncyCastle.Asn1.Ocsp;
+using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Ocsp;
 using PMS_API.Data;
 using PMS_API.Models;
@@ -144,7 +145,7 @@ namespace PMS_API.Services
 
                 DateTime dt1 = new DateTime(A, B, C, D, E, F);
 
-                if (dt1 < DateTime.Now && gole.IsEmpExtentionApproved == false)
+                if (dt1 < DateTime.Now && gole.IsEmpExtentionApproved != true)
                 {
                     return "Time Up";
                 }
@@ -165,34 +166,34 @@ namespace PMS_API.Services
 
 
                 int a = review.EmpReviewId;
-                //if(model.Attachment != null)
-                //{
-                //    if (model.Attachment.Count > 0)
-                //    {
-                //        foreach (var attach in model.Attachment)
-                //        {
-                //            EmployeeAttachment attachment = new EmployeeAttachment();
-                //            IFormFile file = attach;
+                if (model.Attachment != null)
+                {
+                    if (model.Attachment.Count > 0)
+                    {
+                        foreach (var attach in model.Attachment)
+                        {
+                            EmployeeAttachment attachment = new EmployeeAttachment();
+                            IFormFile file = attach;
 
-                //            long length = file.Length;
+                            long length = file.Length;
 
 
-                //            using var fileStream = file.OpenReadStream();
-                //            byte[] bytes = new byte[length];
-                //            fileStream.Read(bytes, 0, (int)file.Length);
+                            using var fileStream = file.OpenReadStream();
+                            byte[] bytes = new byte[length];
+                            fileStream.Read(bytes, 0, (int)file.Length);
 
-                //            attachment.Attachment = bytes.ToArray();
-                //            attachment.EmpReviewId = a;
-                //            attachment.IsActive = true;
-                //            attachment.IsDeleted = false;
-                //            attachment.CreatedOn = DateTime.Now;
-                //            _context.EmployeeAttachments.Add(attachment);
-                //            _context.SaveChanges();
+                            attachment.Attachment = bytes.ToArray();
+                            attachment.EmpReviewId = a;
+                            attachment.IsActive = true;
+                            attachment.IsDeleted = false;
+                            attachment.CreatedOn = DateTime.Now;
+                            _context.EmployeeAttachments.Add(attachment);
+                            _context.SaveChanges();
 
-                //        }
+                        }
 
-                //    }
-                //}
+                    }
+                }
 
                 var data = _context.EmployeeModules.Where(x => x.EmployeeId == model.EmployeeId).FirstOrDefault();
                 var mandata = _context.ManagersTbls.Where( x=> x.ManagerId == gole.AssingedManagerId).FirstOrDefault(); 
@@ -291,16 +292,41 @@ namespace PMS_API.Services
             return "Goal Not Exist";
         }
         public string ExtentionRequest(int EmployeeID, int GoalID)
-
-
         {
-            var goal = _context.GoalModules.Where(x => x.EmployeeId == EmployeeID && x.GoalId == GoalID&& x.IsDeleted != true).FirstOrDefault();
+            var goal = _context.GoalModules.Where(x => x.EmployeeId == EmployeeID && x.GoalId == GoalID && x.IsDeleted != true).FirstOrDefault();
+           
             if (goal != null)
             {
-              
-            }
+                if (goal.IsEmpExtentionRequested == true)
+                {
+                    return "Already Requested";
+                }
+                var join = from emp in _context.EmployeeModules
+                           join man in _context.ManagersTbls
+                           on emp.FirstLevelReportingManager equals man.ManagerId
+                           select new
+                           {
+                               emp,
+                               man
+                           };
+                var Empl = join.FirstOrDefault();
 
-            return "";
+                var msg = " Hi " + Empl.man.ManagerName + " " + " Please Extend my Review Time ";
+                var message = new Message(new string[] { Empl.man.Email }, "Notification of Review Extention Permission", msg.ToString(), null);
+
+               var a = emailService.SendEmail(message);
+                if(a == "ok")
+                {
+                    goal.IsEmpExtentionRequested= true;
+                    _context.GoalModules.Update(goal);
+                    _context.SaveChanges();
+                    return "Ok";
+                }
+                return "error";
+
+            }
+            
+            return "error";
         }
         public string ManagerGoalReview(ManagerReviewVM model)
         {
