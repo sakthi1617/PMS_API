@@ -32,15 +32,11 @@ namespace PMS_API.Repository
         public string DeleteEmployee(int EmployeeId);
         public dynamic ReqForUpdateLvl(int EmpID, int SklID, string descrip, string rea, IFormFileCollection fiels);
         public string LevlelApprovedSuccess(int reqid, bool status);
-
         public void EmailDelivery();
-
         public string UpdateLevelForEmployee(UserLevelVM level);
         public string DeleteSkillbyEmp(int EmployeeId, int SkillId);
         public dynamic FindRequiredEmployee(FindEmployee find);
         public dynamic UserLevelDecrement(int Employeeid, int skillId);
-
-       // public Task SaveFileAsync(ControllerBase controllerl);
         public void Save();
     }
 }

@@ -8,7 +8,10 @@ namespace PMS_API.Models
     {
         public EmployeeModule()
         {
+            EmployeeGoalReviews = new HashSet<EmployeeGoalReview>();
             GoalModules = new HashSet<GoalModule>();
+            GoalRatings = new HashSet<GoalRating>();
+            ManagerGoalReviews = new HashSet<ManagerGoalReview>();
             ManagersTbls = new HashSet<ManagersTbl>();
             RequestForApproveds = new HashSet<RequestForApproved>();
             UserLevels = new HashSet<UserLevel>();
@@ -49,7 +52,10 @@ namespace PMS_API.Models
         public virtual ManagersTbl? FirstLevelReportingManagerNavigation { get; set; }
         public virtual Role? Role { get; set; }
         public virtual ManagersTbl? SecondLevelReportingManagerNavigation { get; set; }
+        public virtual ICollection<EmployeeGoalReview> EmployeeGoalReviews { get; set; }
         public virtual ICollection<GoalModule> GoalModules { get; set; }
+        public virtual ICollection<GoalRating> GoalRatings { get; set; }
+        public virtual ICollection<ManagerGoalReview> ManagerGoalReviews { get; set; }
         public virtual ICollection<ManagersTbl> ManagersTbls { get; set; }
         public virtual ICollection<RequestForApproved> RequestForApproveds { get; set; }
         public virtual ICollection<UserLevel> UserLevels { get; set; }

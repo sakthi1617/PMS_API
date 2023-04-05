@@ -19,15 +19,10 @@ namespace PMS_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    
     public class OrganizationController : ControllerBase
     {
-
-
         private readonly IOrganizationRepo repository;
         private readonly IEmailService _emailservice;
-
-
         public OrganizationController(IOrganizationRepo _repository, IEmailService emailservice)
         {
             repository = _repository;
@@ -36,7 +31,6 @@ namespace PMS_API.Controllers
 
         #region Adding Employee which was access only by Admin
         [Authorize(Roles = "Admin")]
-
         [HttpPost]
         [Route("AddEmployee")]
         public async Task<IActionResult> addEmployee(EmployeeVM employeeModule)
@@ -59,23 +53,23 @@ namespace PMS_API.Controllers
                             _emailservice.SendEmail(message);
 
                             return StatusCode(StatusCodes.Status201Created,
-                            new ResponseStatus { status = "Success", message = "Employee Added Successfully." });
+                            new ResponseStatus { status = "Success", message = "Employee Added Successfully.", statusCode = StatusCodes.Status201Created });
                         }
                         else
                         {
                             return StatusCode(StatusCodes.Status400BadRequest,
-                              new ResponseStatus { status = "Error", message = "Something Error" });
+                              new ResponseStatus { status = "Error", message = "Something Error" , statusCode = StatusCodes.Status400BadRequest });
                         }
                     }
                     else
                     {
                         return StatusCode(StatusCodes.Status400BadRequest,
-                   new ResponseStatus { status = "Error", message = "User Already Exists" });
+                   new ResponseStatus { status = "Error", message = "User Already Exists" , statusCode = StatusCodes.Status400BadRequest });
                     }
 
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                    new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                    new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
@@ -89,8 +83,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
-
 
         #region Adding Department which was access only by Admin
         [HttpPost]
@@ -105,10 +97,10 @@ namespace PMS_API.Controllers
                     repository.AddDepartment(department);
                     repository.Save();
                     return StatusCode(StatusCodes.Status201Created,
-                       new ResponseStatus { status = "Success", message = "Department Added Successfully" });
+                       new ResponseStatus { status = "Success", message = "Department Added Successfully", statusCode = StatusCodes.Status201Created });
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                   new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                   new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
@@ -122,7 +114,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Adding Designation which was access only by Admin
         [HttpPost]
@@ -137,10 +128,10 @@ namespace PMS_API.Controllers
                     repository.AddDesignation(designation);
                     repository.Save();
                     return StatusCode(StatusCodes.Status201Created,
-                      new ResponseStatus { status = "Success", message = "Designation Added Successfully" });
+                      new ResponseStatus { status = "Success", message = "Designation Added Successfully" , statusCode = StatusCodes.Status201Created });
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                 new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                 new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
@@ -154,7 +145,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Adding Skills which was access only by Admin
         [HttpPost]
@@ -169,10 +159,10 @@ namespace PMS_API.Controllers
                     repository.AddSkill(skill);
                     repository.Save();
                     return StatusCode(StatusCodes.Status201Created,
-                        new ResponseStatus { status = "Success", message = "Skill Added Successfully" });
+                        new ResponseStatus { status = "Success", message = "Skill Added Successfully", statusCode = StatusCodes.Status201Created });
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                   new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                   new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
@@ -186,7 +176,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Adding Additional skills which was access only by Admin
         [HttpPost]
@@ -204,24 +193,22 @@ namespace PMS_API.Controllers
                         case "Success":
                             repository.Save();
                             return StatusCode(StatusCodes.Status201Created,
-                               new ResponseStatus { status = "Success", message = "Skill Added Successfully" });
+                               new ResponseStatus { status = "Success", message = "Skill Added Successfully" , statusCode = StatusCodes.Status201Created });
 
                         case "Skill Already Exist":
                             return StatusCode(StatusCodes.Status400BadRequest,
-                 new ResponseStatus { status = "Error", message = "Skill Already Added This Employee..." });
+                               new ResponseStatus { status = "Error", message = "Skill Already Added This Employee...", statusCode = StatusCodes.Status400BadRequest });
                         case "User Not exists":
                             return StatusCode(StatusCodes.Status404NotFound,
-                 new ResponseStatus { status = "Error", message = "User Not Found" });
+                               new ResponseStatus { status = "Error", message = "User Not Found" , statusCode= StatusCodes.Status404NotFound });
                     }
-
 
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                  new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                  new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -231,7 +218,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Adding skillWeightage which was access only by Admin
         [HttpPost]
@@ -246,14 +232,13 @@ namespace PMS_API.Controllers
                     repository.AddSkillWeightage(weightage);
                     repository.Save();
                     return StatusCode(StatusCodes.Status201Created,
-                         new ResponseStatus { status = "Success", message = "Weightage Added Successfully." });
+                         new ResponseStatus { status = "Success", message = "Weightage Added Successfully." ,statusCode= StatusCodes.Status201Created });
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                        new ResponseStatus { status = "Error", message = "Invalid Data." });
+                        new ResponseStatus { status = "Error", message = "Invalid Data." , statusCode= StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -263,7 +248,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Updating EMployee which wass access only by Admin
         [HttpPut]
@@ -271,34 +255,28 @@ namespace PMS_API.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateEmployee(int id, EmployeeVM employee)
         {
-
-
             try
             {
                 if (ModelState.IsValid && employee.EmployeeId != null)
                 {
-
                     string a = repository.UpdateEmployee(id, employee);
-
                     switch (a)
                     {
                         case "Updated":
                             return StatusCode(StatusCodes.Status201Created,
-                            new ResponseStatus { status = "Success", message = "Employee Details Updated Successfully." });
+                            new ResponseStatus { status = "Success", message = "Employee Details Updated Successfully." , statusCode= StatusCodes.Status201Created });
 
                         case "User Not Exists":
                             return StatusCode(StatusCodes.Status404NotFound,
-                            new ResponseStatus { status = "Not Found", message = "User Not Exists" });
+                            new ResponseStatus { status = "Not Found", message = "User Not Exists" , statusCode= StatusCodes.Status404NotFound });
                     }
-
                 }
 
                 return StatusCode(StatusCodes.Status404NotFound,
-                       new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                       new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode= StatusCodes.Status404NotFound });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -309,7 +287,6 @@ namespace PMS_API.Controllers
 
         }
         #endregion
-
 
         #region Updating Department which wass access only by Admin
         [HttpPut]
@@ -329,23 +306,20 @@ namespace PMS_API.Controllers
                         case "Updated":
                             repository.Save();
                             return StatusCode(StatusCodes.Status201Created,
-                               new ResponseStatus { status = "Success", message = "Department Updated Successfully" });
+                               new ResponseStatus { status = "Success", message = "Department Updated Successfully", statusCode = StatusCodes.Status201Created });
 
                         case "Department Not Exists":
 
                             return StatusCode(StatusCodes.Status404NotFound,
-                               new ResponseStatus { status = "Success", message = "Department Not Exists" });
-
+                               new ResponseStatus { status = "Success", message = "Department Not Exists",statusCode= StatusCodes.Status404NotFound });
                     }
-
 
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                   new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                   new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -356,7 +330,6 @@ namespace PMS_API.Controllers
 
         }
         #endregion
-
 
         #region Updating Designation which was access only by Admin
         [HttpPut]
@@ -375,22 +348,19 @@ namespace PMS_API.Controllers
                         case "Updated":
                             repository.Save();
                             return StatusCode(StatusCodes.Status201Created,
-                              new ResponseStatus { status = "Success", message = "Designation Updated Successfully" });
+                              new ResponseStatus { status = "Success", message = "Designation Updated Successfully" , statusCode = StatusCodes.Status201Created });
 
                         case "Designation Not Exists":
 
                             return StatusCode(StatusCodes.Status404NotFound,
-                                new ResponseStatus { status = "Error", message = "Department Not Exists" });
+                                new ResponseStatus { status = "Error", message = "Department Not Exists", statusCode = StatusCodes.Status404NotFound });
                     }
-
-
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                 new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                       new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -400,7 +370,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Updating Skill which was access only by Admin
         [HttpPut]
@@ -418,16 +387,16 @@ namespace PMS_API.Controllers
                         case "Updated":
                             repository.Save();
                             return StatusCode(StatusCodes.Status201Created,
-                                new ResponseStatus { status = "Success", message = "Skill Updated SuccessFully" });
+                                new ResponseStatus { status = "Success", message = "Skill Updated SuccessFully" , statusCode = StatusCodes.Status201Created });
 
                         case "Designation Not Exists":
 
                             return StatusCode(StatusCodes.Status404NotFound,
-                                new ResponseStatus { status = "Error", message = "Skill Not Exists" });
+                                new ResponseStatus { status = "Error", message = "Skill Not Exists" , statusCode = StatusCodes.Status404NotFound });
                     }
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode= StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
@@ -441,42 +410,35 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Updating Level
         [HttpPost]
         [Route("ReqForUpdateLvl")]
         public async Task<IActionResult> ReqForUpdateLvl(int EmpID,int SklID, string descrip, string rea, IFormFileCollection fiels)
         {
-            //var files = Request.Form.Files.Any() ? Request.Form.Files : new FormFileCollection();
             try
             {
                 if (ModelState.IsValid)
                 {
-                    //  var files = formFiles.FileName() ? formFiles : new FormFileCollection();
-                    //  var file = formFiles;
-                  // var files = Request.Form.Files.Any() ? Request.Form.Files : new FormFileCollection();
-
-                  //  var a = repository.ReqForUpdateLvl(level,files);
                     var a = repository.ReqForUpdateLvl(EmpID,SklID,descrip,rea, fiels);
 
                     switch (a)
                     {
                         case "Ok":
                             return StatusCode(StatusCodes.Status200OK,
-                                new ResponseStatus { status = "Success", message = "Your Update Request Send Successfully" });
+                                new ResponseStatus { status = "Success", message = "Your Update Request Send Successfully" , statusCode = StatusCodes.Status200OK });
                         case "Error":
                             return StatusCode(StatusCodes.Status404NotFound,
-                                new ResponseStatus { status = "Error", message = "User Not Exsist" });
+                                new ResponseStatus { status = "Error", message = "User Not Exsist" , statusCode = StatusCodes.Status404NotFound });
 
                         case "MaxLevel":
                             return StatusCode(StatusCodes.Status400BadRequest,
-                                new ResponseStatus { status = "Error", message = "Cannot upgrade as you have reached the maximum score already." });
+                                new ResponseStatus { status = "Error", message = "Cannot upgrade as you have reached the maximum score already.", statusCode= StatusCodes.Status400BadRequest });
                     }
 
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                                 new ResponseStatus { status = "Error", message = "Invalid datas" });
+                                 new ResponseStatus { status = "Error", message = "Invalid datas", statusCode= StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
@@ -490,7 +452,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region LevelApprovedSucess
         [HttpPost]
@@ -507,23 +468,20 @@ namespace PMS_API.Controllers
                     {
                         case "Ok":
                             return StatusCode(StatusCodes.Status201Created,
-                                new ResponseStatus { status = "Success", message = "Response Deliverd" });
+                                new ResponseStatus { status = "Success", message = "Response Deliverd", statusCode= StatusCodes.Status201Created });
                         case "error":
                             return StatusCode(StatusCodes.Status404NotFound,
-                                new ResponseStatus { status = "Error", message = "Something Error" });
+                                new ResponseStatus { status = "Error", message = "Something Error", statusCode= StatusCodes.Status404NotFound });
                         case "RequestExpired":
                             return StatusCode(StatusCodes.Status400BadRequest,
-                                new ResponseStatus { status = "Error", message = "RequestExpired" });
+                                new ResponseStatus { status = "Error", message = "RequestExpired", statusCode= StatusCodes.Status400BadRequest });
                     }
                 }
-
-
                 return StatusCode(StatusCodes.Status404NotFound,
-                                new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                                new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status404NotFound });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -533,8 +491,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
-
 
         #region Updating Level For Employee which was access only Admin
         [HttpPut]
@@ -553,22 +509,21 @@ namespace PMS_API.Controllers
                         case "Updated":
                             repository.Save();
                             return StatusCode(StatusCodes.Status201Created,
-                          new ResponseStatus { status = "Success", message = "Level Updated Successfully." });
+                          new ResponseStatus { status = "Success", message = "Level Updated Successfully.", statusCode= StatusCodes.Status201Created });
 
                         case "Error":
                             return StatusCode(StatusCodes.Status404NotFound,
-                               new ResponseStatus { status = "Error", message = "Level not updated" });
+                               new ResponseStatus { status = "Error", message = "Level not updated" , statusCode= StatusCodes.Status404NotFound });
                         case "User Not Exist":
                             return StatusCode(StatusCodes.Status404NotFound,
-                               new ResponseStatus { status = "Error", message = "User Not Exist" });
+                               new ResponseStatus { status = "Error", message = "User Not Exist" , statusCode = StatusCodes.Status404NotFound });
                     }
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                   new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                   new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -578,7 +533,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region UpdateSkillWeightage which was access only by Admin
         [HttpPut]
@@ -596,15 +550,15 @@ namespace PMS_API.Controllers
                         case "Updated":
                             repository.Save();
                             return StatusCode(StatusCodes.Status201Created,
-                                new ResponseStatus { status = "Success", message = "Weightage Updated SuccessFully" });
+                                new ResponseStatus { status = "Success", message = "Weightage Updated SuccessFully",statusCode= StatusCodes.Status201Created });
 
                         case "Skill Not Exists":
                             return StatusCode(StatusCodes.Status404NotFound,
-                                new ResponseStatus { status = "Error", message = "Skill Not Exists" });
+                                new ResponseStatus { status = "Error", message = "Skill Not Exists", statusCode= StatusCodes.Status404NotFound  });
                     }
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
-                 new ResponseStatus { status = "Error", message = "Invalid Datas" });
+                 new ResponseStatus { status = "Error", message = "Invalid Datas",statusCode = StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
@@ -618,7 +572,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Listing EmployeeDetail which was access by all
         [HttpGet]
@@ -629,8 +582,12 @@ namespace PMS_API.Controllers
             try
             {
                 var employeeList = repository.EmployeeList().ToList();
+                return Ok(new
+                {
 
-                return Ok(employeeList);
+                    list = employeeList,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Employee List.", statusCode = StatusCodes.Status200OK }
+                });
             }
             catch (Exception ex)
             {
@@ -644,7 +601,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Listing EmployeeDetail by Id which wass access by all
         [HttpGet]
@@ -657,13 +613,20 @@ namespace PMS_API.Controllers
                 var EmployeeId = repository.EmployeeById(id);
                 if (EmployeeId == null)
                 {
-                    return Ok("User Data Unavailable");
+                    return NotFound(new
+                    {        
+                        ResponseStatus = new ResponseStatus { status = "Error", message = "User Data Unavailable", statusCode = StatusCodes.Status404NotFound }
+                    });
                 }
-                return Ok(EmployeeId); 
+                return Ok(new
+                {
+
+                    list = EmployeeId,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Employee Detail.", statusCode = StatusCodes.Status200OK }
+                }); 
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -673,8 +636,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
-
 
         #region Listing Employee by Department which was access by all
         [HttpGet]
@@ -685,12 +646,23 @@ namespace PMS_API.Controllers
             try
             {
                 var EmpById = repository.EmployeeByDepartment(Id).ToList();
+                if (EmpById.Count > 0)
+                {
+                    return Ok(new
+                    {
+                        list = EmpById,
+                        ResponseStatus = new ResponseStatus { status = "Success", message = "Employee List.", statusCode = StatusCodes.Status200OK }
+                    });
+                }
+                return NotFound(new
+                {
+                    ResponseStatus = new ResponseStatus { status = "Error", message = "Employee not found.", statusCode = StatusCodes.Status404NotFound }
 
-                return Ok(EmpById);
+                });
+               
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -700,7 +672,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Listing Department which was access by all
         [HttpGet]
@@ -711,12 +682,14 @@ namespace PMS_API.Controllers
             try
             {
                 var departmentlist = repository.DepartmentModule().ToList();
-
-                return Ok(departmentlist);
+                return Ok(new
+                {
+                    list = departmentlist,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Department List.", statusCode = StatusCodes.Status200OK }
+                });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -726,7 +699,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Listing Skill which was access by all
         [HttpGet]
@@ -737,11 +709,15 @@ namespace PMS_API.Controllers
             try
             {
                 var skillList = repository.SkilsList().ToList();
-                return Ok(skillList);
+                return Ok(new
+                {
+
+                    list = skillList,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Skill List.", statusCode = StatusCodes.Status200OK }
+                });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -751,7 +727,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Listing Skill by DepartmentId which wass access by All
         [HttpGet]
@@ -762,11 +737,15 @@ namespace PMS_API.Controllers
             try
             {
                 var skillbydeptid = repository.SkillbyDepartmentID(id).ToList();
-                return Ok(skillbydeptid);
+                return Ok(new
+                {
+
+                    list = skillbydeptid,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Skill List.", statusCode = StatusCodes.Status200OK }
+                });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -776,7 +755,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Listing Designation which was access by all
         [HttpGet]
@@ -787,7 +765,12 @@ namespace PMS_API.Controllers
             try
             {
                 var desig = repository.DesignationModule().ToList();
-                return Ok(desig);
+                return Ok(new
+                {
+
+                    list = desig,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Designation List.", statusCode = StatusCodes.Status200OK }
+                });
             }
             catch (Exception ex)
             {
@@ -801,7 +784,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Listing Employee skill by Id which wass access by all
         [HttpGet]
@@ -812,11 +794,22 @@ namespace PMS_API.Controllers
             try
             {
                 var Employee = repository.GetEmployeeSkillsById(EmployeeId).ToList();
-                return Ok(Employee);
+                if(Employee.Count >0)
+                {
+                    return Ok(new
+                    {
+
+                        list = Employee,
+                        ResponseStatus = new ResponseStatus { status = "Success", message = "Skill List.", statusCode = StatusCodes.Status200OK }
+                    });
+                }
+                return NotFound(new
+                {
+                    ResponseStatus = new ResponseStatus { status = "Error", message = "Employee Not Found.", statusCode = StatusCodes.Status404NotFound}
+                });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -826,7 +819,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Deleting Employee which wass access only by Admin
         [HttpDelete]
@@ -843,14 +835,14 @@ namespace PMS_API.Controllers
                     case "Deleted":
                         repository.Save();
                         return StatusCode(StatusCodes.Status200OK,
-                            new ResponseStatus { status = "Success", message = "Employee Details Deleted SuccessFully" });
+                            new ResponseStatus { status = "Success", message = "Employee Details Deleted SuccessFully" ,statusCode= StatusCodes.Status200OK });
                     case "Error":
                         return StatusCode(StatusCodes.Status404NotFound,
-                               new ResponseStatus { status = "Error", message = "Employee not found" });
+                               new ResponseStatus { status = "Error", message = "Employee not found", statusCode= StatusCodes.Status404NotFound });
 
                 }
                 return StatusCode(StatusCodes.Status404NotFound,
-                              new ResponseStatus { status = "Error", message = "Something Error" });
+                              new ResponseStatus { status = "Error", message = "Something Error",statusCode= StatusCodes.Status404NotFound });
             }
             catch (Exception ex)
             {
@@ -864,7 +856,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region Deleting Skill by Employee which was access only by Admin
         [HttpDelete]
@@ -880,16 +871,16 @@ namespace PMS_API.Controllers
                     case "Employee Skill Removed":
                         repository.Save();
                         return StatusCode(StatusCodes.Status200OK,
-                           new ResponseStatus { status = "Success", message = "Employee Skill Deleted SuccessFully" });
+                           new ResponseStatus { status = "Success", message = "Employee Skill Deleted SuccessFully" , statusCode= StatusCodes.Status200OK });
 
                     case "Error":
                         return StatusCode(StatusCodes.Status404NotFound,
-                              new ResponseStatus { status = "Error", message = "Employee Skill not found" });
+                              new ResponseStatus { status = "Error", message = "Employee Skill not found" , statusCode = StatusCodes.Status404NotFound });
 
                 }
 
                 return StatusCode(StatusCodes.Status404NotFound,
-                            new ResponseStatus { status = "Error", message = "Something Error" });
+                            new ResponseStatus { status = "Error", message = "Something Error" , statusCode= StatusCodes.Status404NotFound });
             }
             catch (Exception ex)
             {
@@ -903,7 +894,6 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
 
         #region FindRequiredEmployee which was access only by Admin
         [HttpGet]
@@ -914,12 +904,15 @@ namespace PMS_API.Controllers
             try
             {
                 var emplist = repository.FindRequiredEmployee(find);
+                return Ok(new
+                {
 
-                return Ok(emplist);
+                    list = emplist,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Employee List.", statusCode = StatusCodes.Status200OK }
+                });
             }
             catch (Exception ex)
             {
-
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -929,7 +922,7 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
+        
         #region UserLEvelDecrement
         [HttpPost]
         [Route("UserLevelDecrement")]
@@ -942,11 +935,12 @@ namespace PMS_API.Controllers
                 {
                     //return Ok(levelDecre);
                     return StatusCode(StatusCodes.Status200OK,
-                         new ResponseStatus { status = "Success", message = "Employee Skill level Decreased SuccessFully" });
+                         new ResponseStatus { status = "Success", message = "Employee Skill level Decreased SuccessFully" , statusCode = StatusCodes.Status200OK });
                 }
                 else
                 {
-                    return null;
+                    return StatusCode(StatusCodes.Status404NotFound,
+                          new ResponseStatus { status = "Error", message = "Invaid Datas", statusCode = StatusCodes.Status404NotFound });
                 }
             }
             catch (Exception ex)

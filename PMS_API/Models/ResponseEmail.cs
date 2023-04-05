@@ -5,8 +5,10 @@
         public int ResponseId { get; set; }
         public int? ReqId { get; set; }
         public bool? Status { get; set; }
-        public int? EmployeeID { get; set; }
+        public int? EmployeeId { get; set; }
         public string? Employeename { get; set; }
+        public int? Skillid { get; set; }
+        public string? SkillName { get; set; }
         public string? FirstLvlManagerName { get; set; }
         public string? FirstlvlManagerMail { get; set; }
         public string? SecondlvlManagerName { get; set; }
@@ -19,9 +21,6 @@
         public bool? IsUpdated { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public bool? IsActive { get; set; }
-        public int? Skillid { get; set; }
-        public string? SkillName { get; set; }
-
 
         public virtual RequestForApproved? Req { get; set; }
     }
