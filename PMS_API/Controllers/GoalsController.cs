@@ -225,17 +225,22 @@ namespace PMS_API.Controllers
                 var a = repository.ExtentionRequest(EmployeeID, GoalID);
                 switch (a)
                 {
-                    case "":
+                    case "Ok":
                         return StatusCode(StatusCodes.Status200OK,
-                          new ResponseStatus { status = "Success", message = "Your Comment Posated Successfully" ,statusCode = StatusCodes.Status200OK });
+                          new ResponseStatus { status = "Success", message = "Your Request send To Your Manager" ,statusCode = StatusCodes.Status200OK });
 
-                    case "a":
-                        return StatusCode(StatusCodes.Status200OK,
-                          new ResponseStatus { status = "Success", message = "Your Comment Posated Successfully" ,statusCode = StatusCodes.Status200OK });
+                    case "error":
+                        return StatusCode(StatusCodes.Status400BadRequest,
+                          new ResponseStatus { status = "Error", message = "Somthing went wrong Please Try again Later" ,statusCode = StatusCodes.Status400BadRequest }); 
+
+                    case "Already Requested":
+                        return StatusCode(StatusCodes.Status400BadRequest,
+                          new ResponseStatus { status = "Error", message = "Your Request already Submitted" ,statusCode = StatusCodes.Status400BadRequest });
                 }
             }
 
-            return Ok(GoalID);
+            return StatusCode(StatusCodes.Status400BadRequest,
+                         new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
         }
 
         [HttpPost]

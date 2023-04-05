@@ -73,7 +73,9 @@ namespace PMS_API.Controllers
                             name = exisitingUser?.Name,
                             id = exisitingUser.EmployeeId,
                             role = userRole,
-                            ResponseStatus = new ResponseStatus { status = "Success", message = "Login Successfully." ,statusCode = StatusCodes.Status200OK }
+                            status = "Success", 
+                            message = "Login Successfully." ,
+                            statusCode = StatusCodes.Status200OK 
 
                         });
                     }
@@ -94,7 +96,9 @@ namespace PMS_API.Controllers
                             name = exisitingUser?.Name,
                             id = exisitingUser.EmployeeId,
                             role = userRole,
-                            ResponseStatus = new ResponseStatus { status = "Success", message = "Login Successfully." , statusCode = StatusCodes.Status200OK }
+                            status = "Success",
+                            message = "Login Successfully." ,
+                            statusCode = StatusCodes.Status200OK 
 
                         });
                     }
