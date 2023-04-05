@@ -8,12 +8,10 @@ namespace PMS_API.Services
     public class Emailservice : IEmailService
     {
         private readonly EmailConfig _emailConfig;
-
         public Emailservice(EmailConfig emailConfig)
         {
             _emailConfig = emailConfig;
         }
-
         public string SendEmail(Message message)
         {
             var emailMessage = CreateEmailMessage(message);
@@ -25,22 +23,17 @@ namespace PMS_API.Services
 
             return "Error";
         }
-
         private MimeMessage CreateEmailMessage(Message message)
         {
             var emailMessage = new MimeMessage();
-
             emailMessage.From.Add(new MailboxAddress("email", _emailConfig.From));
             emailMessage.To.AddRange(message.To);
             emailMessage.Subject = message.Subject;
-            
             //emailMessage.Body = new TextPart("html")
             //{
             //    Text = message.Content
             //};
-
-           // var bodyBuilder = new BodyBuilder { HtmlBody = string.Format("<h2 style='color:red;'>{0}</h2>", message.Content) };
-
+            // var bodyBuilder = new BodyBuilder { HtmlBody = string.Format("<h2 style='color:red;'>{0}</h2>", message.Content) };
             //Text = $"To set your password, please click the following link: https://localhost:7099/api/OrganizationAuth/GeneratetPassword?Email=" + message.To[0].Address
 
             var bodyBuilder = new BodyBuilder { HtmlBody = string.Format("<h2 style='color:red;'>{0}</h2>", message.Content) };
@@ -58,15 +51,11 @@ namespace PMS_API.Services
                 }
             }
             emailMessage.Body = bodyBuilder.ToMessageBody();
-           
 
             return emailMessage;
         }
-
-
         private string Send(MimeMessage mailMessage)
         {
-             
             using var client = new SmtpClient();
             try
             {
@@ -74,8 +63,7 @@ namespace PMS_API.Services
                 client.AuthenticationMechanisms.Remove("XOAUTH2");
                 client.Authenticate(_emailConfig.userName, _emailConfig.Password);
                 var res = client.Send(mailMessage);                   
-               
-               
+         
                 return "MailSend";
             }
             catch (Exception ex)
@@ -87,13 +75,7 @@ namespace PMS_API.Services
                 client.Disconnect(true);
                 client.Dispose();
             }
-
-
         }
-
-
     }
-
-
 }
 
