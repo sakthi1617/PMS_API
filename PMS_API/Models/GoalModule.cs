@@ -15,8 +15,7 @@ namespace PMS_API.Models
         public string? Goalname { get; set; }
         public string? GoalDescription { get; set; }
         public string? Assignedby { get; set; }
-        public DateTime AssignedAt { get; set; }
-        
+        public DateTime CreatedAt { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? DueDate { get; set; }
         public string? Priority { get; set; }

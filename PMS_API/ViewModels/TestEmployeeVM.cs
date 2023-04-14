@@ -1,21 +1,17 @@
-﻿using PMS_API.Models;
-
-namespace PMS_API.ViewModels
+﻿namespace PMS_API.ViewModels
 {
-    public class EmployeeVM
+    public class TestEmployeeVM
     {
         public int EmployeeId { get; set; }
-        public string? EmployeeIdentity { get; set; }
         public string? Name { get; set; }
         public string? Email { get; set; }
         public int? DepartmentId { get; set; }
+        public string DepartmentName { get; set; }
         public int? DesignationId { get; set; }
+        public string DesignationName { get; set; }
         public int? RoleId { get; set; }
         public DateTime? DateOfJoining { get; set; }
         public int? PriviousExperience { get; set; }
-
-        public int? FirstLevelReportingManager { get; set; }
-       // public int? SecondLevelReportingManager { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public int? Age { get; set; }
         public string? Gender { get; set; }
@@ -23,10 +19,6 @@ namespace PMS_API.ViewModels
         public string? WorkPhoneNumber { get; set; }
         public string? PersonalPhone { get; set; }
         public string? PersonalEmail { get; set; }
-        public decimal? Salary { get; set; }
         public string? ProfilePicture { get; set; }
-
-      public  List<UserSkillsVM> skills { get;set; }
-
     }
 }

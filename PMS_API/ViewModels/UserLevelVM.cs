@@ -3,6 +3,9 @@
     public class UserLevelVM
     {
         public int? EmployeeId { get; set; }
+
+        public string? EmployeeIdentity { get; set; }
+
         public int? SkillId { get; set; }
         public int? Level { get; set; }
         public int? Weightage { get; set; }

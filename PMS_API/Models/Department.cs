@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PMS_API.ViewModels;
+using System;
 using System.Collections.Generic;
 
 namespace PMS_API.Models
@@ -9,6 +10,7 @@ namespace PMS_API.Models
         {
             EmployeeModules = new HashSet<EmployeeModule>();
             Weightages = new HashSet<Weightage>();
+            Designation1s = new HashSet<Designation1>();
         }
 
         public int DepartmentId { get; set; }
@@ -20,5 +22,6 @@ namespace PMS_API.Models
 
         public virtual ICollection<EmployeeModule> EmployeeModules { get; set; }
         public virtual ICollection<Weightage> Weightages { get; set; }
+        public virtual ICollection<Designation1> Designation1s { get; set; }
     }
 }
