@@ -21,13 +21,13 @@ namespace PMS_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class OrganizationAuthController : ControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
         private readonly IPasswordService _passwordService;
         private readonly PMSContext _context;
         private readonly IEmailService _emailservice;
-        public OrganizationAuthController(IConfiguration configuration, IPasswordService passwordService, PMSContext context, IEmailService emailService)   
+        public AuthController(IConfiguration configuration, IPasswordService passwordService, PMSContext context, IEmailService emailService)   
         {
             _configuration = configuration;
             _passwordService = passwordService;
