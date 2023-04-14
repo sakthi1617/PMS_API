@@ -16,7 +16,7 @@ namespace PMS_API.Models
         public int? AssingedManagerId { get; set; }
         public int? GoalId { get; set; }
         public string? EmpReview { get; set; }
-        public int? GoalRating { get; set; }
+        public decimal? GoalRating { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
         public bool? IsCalculated { get; set; }

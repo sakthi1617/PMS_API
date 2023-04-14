@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PMS_API.LogHandling;
 using PMS_API.Models;
+using PMS_API.Reponse;
 using PMS_API.Repository;
 using PMS_API.SupportModel;
 using PMS_API.ViewModels;
@@ -33,6 +35,11 @@ namespace PMS_API.Controllers
 
                         return StatusCode(StatusCodes.Status201Created,
                          new ResponseStatus { status = "Success", message = "Goal Added Successfully" ,statusCode= StatusCodes.Status201Created });
+
+                    case "Delay":   
+                        return StatusCode(StatusCodes.Status201Created,
+                         new ResponseStatus { status = "Success", message = "You have uploaded goals late so your goals are Assign To Employee after Admin approval", statusCode = StatusCodes.Status201Created });
+
                     case "Error":
                         return StatusCode(StatusCodes.Status404NotFound,
                          new ResponseStatus { status = "Error", message = "Employee not found", statusCode = StatusCodes.Status404NotFound });
@@ -50,17 +57,18 @@ namespace PMS_API.Controllers
 
         [HttpPut]
         [Route("UpdateGoalForEmployee")]
-        public async Task<IActionResult> UpdateGoalForEmployee(int empid, int goalid, GoalVM model)
+        public async Task<IActionResult> UpdateGoalForEmployee(string EmployeeIdentity, int goalid, GoalVM model)
         {
             if (ModelState.IsValid)
             {
-                var a = repository.UpdateGoalForEmployee(empid, goalid, model);
+                var a = repository.UpdateGoalForEmployee(EmployeeIdentity, goalid, model);
                 switch (a)
                 {
                     case "Success":
                         repository.Save();
                         return StatusCode(StatusCodes.Status200OK,
                          new ResponseStatus { status = "Success", message = "Goal Updated Successfully" , statusCode= StatusCodes.Status200OK });
+
                     case "Error":
                         return StatusCode(StatusCodes.Status404NotFound,
                          new ResponseStatus { status = "Error", message = "Data not found" , statusCode = StatusCodes.Status404NotFound });
@@ -76,39 +84,39 @@ namespace PMS_API.Controllers
                         new ResponseStatus { status = "Error", message = "Something Error" , statusCode = StatusCodes.Status400BadRequest });
         }
 
-        [HttpDelete]
-        [Route("DeleteGoalForEmployee")]
-        public async Task<IActionResult> DeleteGoalForEmployee(int empid, int goalid)
-        {
-            if (ModelState.IsValid)
-            {
-                var a = repository.DeleteGoalForEmployee(empid, goalid);
-                switch (a)
-                {
-                    case "Success":
-                        repository.Save();
-                        return StatusCode(StatusCodes.Status200OK,
-                            new ResponseStatus { status = "Success", message = "Goal Deleted Successfully" , statusCode = StatusCodes.Status200OK });
+        //[HttpDelete]
+        //[Route("DeleteGoalForEmployee")]
+        //public async Task<IActionResult> DeleteGoalForEmployee(int empid, int goalid)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        var a = repository.DeleteGoalForEmployee(empid, goalid);
+        //        switch (a)
+        //        {
+        //            case "Success":
+        //                repository.Save();
+        //                return StatusCode(StatusCodes.Status200OK,
+        //                    new ResponseStatus { status = "Success", message = "Goal Deleted Successfully" , statusCode = StatusCodes.Status200OK });
 
-                    case "Error":
-                        return StatusCode(StatusCodes.Status404NotFound,
-                            new ResponseStatus { status = "Error", message = "Goal Not Found", statusCode = StatusCodes.Status404NotFound });
-                }
-            }
-            else
-            {
-                return StatusCode(StatusCodes.Status400BadRequest,
-                        new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest  });
-            }
-            return BadRequest();
+        //            case "Error":
+        //                return StatusCode(StatusCodes.Status404NotFound,
+        //                    new ResponseStatus { status = "Error", message = "Goal Not Found", statusCode = StatusCodes.Status404NotFound });
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return StatusCode(StatusCodes.Status400BadRequest,
+        //                new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest  });
+        //    }
+        //    return BadRequest();
 
-        }
+        //}
 
         [HttpGet]
         [Route("GetGoalbyEmpId")]
-        public async Task<IActionResult> GetGoalbyEmpId(int empid)
+        public async Task<IActionResult> GetGoalbyEmpId(string EmployeeIdentity)
         {
-            var a = repository.GetGoalbyEmpId(empid).ToList();
+            var a = repository.GetGoalbyEmpId(EmployeeIdentity).ToList();
             if (a == null)
             {
                 return BadRequest(new
@@ -136,24 +144,27 @@ namespace PMS_API.Controllers
                     case "ok":
                         return StatusCode(StatusCodes.Status200OK,
                             new ResponseStatus { status = "Success", message = "Your Comment Posated Successfully", statusCode = StatusCodes.Status200OK });
-
                     case "Goal Not Exist":
                         return StatusCode(StatusCodes.Status404NotFound,
                             new ResponseStatus { status = "Error", message = "Goal Not Found", statusCode = StatusCodes.Status404NotFound });
-                        case "Submitted":
+                    case "Submitted":
                         return StatusCode(StatusCodes.Status400BadRequest,
                             new ResponseStatus { status = "Error", message = "Your Review Already Submitted" , statusCode = StatusCodes.Status400BadRequest });
                     case "Time Up":
                         return StatusCode(StatusCodes.Status400BadRequest,
-                            new ResponseStatus { status = "Error", message = "Your Review Time is over so please contact your Manager..." , statusCode = StatusCodes.Status400BadRequest });
+                            new ResponseStatus { status = "Error", message = "Your Review Time is over so please contact your Manager..." , statusCode = StatusCodes.Status400BadRequest });                    
+                    case "Error":
+                        return StatusCode(StatusCodes.Status400BadRequest,
+                            new ResponseStatus { status = "Error", message = "Somthing Wrong Please try again Later..." , statusCode = StatusCodes.Status400BadRequest });
                 }
+                return BadRequest(a.ToString());
             }
             else
             {
                 return StatusCode(StatusCodes.Status400BadRequest,
                         new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest });
             }
-            return BadRequest();
+            
         }
 
         [HttpPut]
@@ -176,6 +187,39 @@ namespace PMS_API.Controllers
                         return StatusCode(StatusCodes.Status400BadRequest,
                             new ResponseStatus { status = "Error", message = "Your Review Already Submitted", statusCode = StatusCodes.Status400BadRequest });
                     
+                }
+            }
+            else
+            {
+                return StatusCode(StatusCodes.Status400BadRequest,
+                        new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
+            }
+            return BadRequest();
+        }
+
+        [HttpPost]
+        [Route("ManagerGoalReview")]
+        public async Task<IActionResult> ManagerGoalReview([FromForm] ManagerReviewVM reviewVM)
+        {
+            if (ModelState.IsValid)
+            {
+                var a = repository.ManagerGoalReview(reviewVM);
+                switch (a)
+                {
+                    case "ok":
+                        return StatusCode(StatusCodes.Status200OK,
+                            new ResponseStatus { status = "Success", message = "Your Comment Posated Successfully", statusCode = StatusCodes.Status200OK });
+
+                    case "Goal Not Exist":
+                        return StatusCode(StatusCodes.Status404NotFound,
+                            new ResponseStatus { status = "Error", message = "Goal Not Found", statusCode = StatusCodes.Status404NotFound });
+                    case "completed":
+                        return StatusCode(StatusCodes.Status400BadRequest,
+                            new ResponseStatus { status = "Error", message = "Your Review Already Completed", statusCode = StatusCodes.Status400BadRequest });
+
+                    case "Time Up":
+                        return StatusCode(StatusCodes.Status400BadRequest,
+                            new ResponseStatus { status = "Error", message = "Your Review Time is over. if you want more time make a Extention Request ", statusCode = StatusCodes.Status400BadRequest });
                 }
             }
             else
@@ -218,11 +262,11 @@ namespace PMS_API.Controllers
 
         [HttpPost]
         [Route("ExtentionRequest")]
-        public async Task<IActionResult> ExtentionRequest(int EmployeeID, int GoalID)
+        public async Task<IActionResult> EmployeeExtentionRequest(string EmployeeIdentity, int GoalID)
         {
             if(ModelState.IsValid)
             {
-                var a = repository.ExtentionRequest(EmployeeID, GoalID);
+                var a = repository.EmployeeExtentionRequest(EmployeeIdentity, GoalID);
                 switch (a)
                 {
                     case "Ok":
@@ -244,47 +288,115 @@ namespace PMS_API.Controllers
         }
 
         [HttpPost]
-        [Route("ManagerGoalReview")]
-        public async Task<IActionResult> ManagerGoalReview([FromForm] ManagerReviewVM reviewVM)
+        [Route("ManagerExtentionRequest")]
+        public async Task<IActionResult> ManagerExtentionRequest(string EmployeeIdentity, int GoalID)
         {
             if (ModelState.IsValid)
             {
-                var a = repository.ManagerGoalReview(reviewVM);
+                var a = repository.ManagerExtentionRequest(EmployeeIdentity, GoalID);
                 switch (a)
                 {
-                    case "ok":
+                    case "Ok":
                         return StatusCode(StatusCodes.Status200OK,
-                            new ResponseStatus { status = "Success", message = "Your Comment Posated Successfully" , statusCode = StatusCodes.Status200OK });
+                          new ResponseStatus { status = "Success", message = "Your Request send To Your Manager", statusCode = StatusCodes.Status200OK });
 
-                    case "Goal Not Exist":
-                        return StatusCode(StatusCodes.Status404NotFound,
-                            new ResponseStatus { status = "Error", message = "Goal Not Found" , statusCode = StatusCodes.Status404NotFound });
-
-                    case "Time Up":
+                    case "error":
                         return StatusCode(StatusCodes.Status400BadRequest,
-                            new ResponseStatus { status = "Error", message = "Your Review Time is over. if you want more time make a Extention Request " , statusCode = StatusCodes.Status400BadRequest });
+                          new ResponseStatus { status = "Error", message = "Somthing went wrong Please Try again Later", statusCode = StatusCodes.Status400BadRequest });
+
+                    case "Already Requested":
+                        return StatusCode(StatusCodes.Status400BadRequest,
+                          new ResponseStatus { status = "Error", message = "Your Request already Submitted", statusCode = StatusCodes.Status400BadRequest });
                 }
             }
-            else
+
+            return StatusCode(StatusCodes.Status400BadRequest,
+                         new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
+        }
+
+
+        [HttpPost]
+        [Route("EmpExtReqApprove")]
+        public async Task<IActionResult> EmpExtReqApprove(bool approved , int GoalId)
+        {
+            var a = repository.EmpExtReqApprove(approved, GoalId);
+            switch (a)
             {
-                return StatusCode(StatusCodes.Status400BadRequest,
-                        new ResponseStatus { status = "Error", message = "Invalid Datas" ,statusCode = StatusCodes.Status400BadRequest });
+                case "ok":
+                    return StatusCode(StatusCodes.Status200OK,
+                      new ResponseStatus { status = "Success", message = "Extention Time Approved", statusCode = StatusCodes.Status200OK });
+                case "Notok":
+                    return StatusCode(StatusCodes.Status200OK,
+                      new ResponseStatus { status = "Success", message = "Extention Time Declined", statusCode = StatusCodes.Status200OK });
+                case "error":
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                      new ResponseStatus { status = "Error", message = "Somthing went wrong Please Try again Later", statusCode = StatusCodes.Status400BadRequest });
+                 case "Error":
+                    return StatusCode(StatusCodes.Status404NotFound,
+                      new ResponseStatus { status = "Error", message = "Somthing went wrong Please Try again Later", statusCode = StatusCodes.Status404NotFound });
+            
             }
-            return BadRequest();
+            return StatusCode(StatusCodes.Status400BadRequest,
+                        new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
         }
 
         [HttpPost]
+        [Route("ManagerExtReqApprove")]
+        public async Task<IActionResult> ManagerExtReqApprove(bool approved, int GoalId)
+        {
+            var a = repository.ManagerExtReqApprove(approved, GoalId);
+            switch (a)
+            {
+                case "ok":
+                    return StatusCode(StatusCodes.Status200OK,
+                      new ResponseStatus { status = "Success", message = "Your Request send To Your Manager", statusCode = StatusCodes.Status200OK });
+                case "error":
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                      new ResponseStatus { status = "Error", message = "Somthing went wrong Please Try again Later", statusCode = StatusCodes.Status400BadRequest });
+                case "Error":
+                    return StatusCode(StatusCodes.Status404NotFound,
+                      new ResponseStatus { status = "Error", message = "Somthing went wrong Please Try again Later", statusCode = StatusCodes.Status404NotFound });
+                case "Already Requested":
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                      new ResponseStatus { status = "Error", message = "Your Request already Submitted", statusCode = StatusCodes.Status400BadRequest });
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+                        new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
+        }
+
+        [HttpPost]
+        [Route("AdminReqApproved")]
+        public async Task<IActionResult> AdminReqApproved(bool Approved, int delayedGoalId)
+        {
+           if(ModelState.IsValid)
+            {
+                var a = repository.AdminReqApproved(Approved, delayedGoalId);
+
+                switch (a)
+                {
+                    case "Ok":
+                        return StatusCode(StatusCodes.Status200OK,
+                       new ResponseStatus { status = "Success", message = "Request Accepted goal add to Employee", statusCode = StatusCodes.Status200OK });
+                }
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+                       new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
+        }       
+
+        [HttpPost]
         [Route("SubmitGoals")]
-        public async Task<IActionResult> SubmitGoals(int EmployeeID)
+        public async Task<IActionResult> SubmitGoals(string EmployeeIdentity)
         {
             if (ModelState.IsValid)
             {
-                 repository.GoalRatingCalculation(EmployeeID);
+                 repository.GoalRatingCalculation(EmployeeIdentity);
                 return Ok();
             }
             return BadRequest();
         }
 
+
+       
 
 
     }
