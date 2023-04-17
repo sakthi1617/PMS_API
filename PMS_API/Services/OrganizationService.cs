@@ -1,39 +1,39 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Hangfire;
+using Hangfire.Common;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
+using Org.BouncyCastle.Asn1.Ocsp;
 using PMS_API.Data;
 using PMS_API.Models;
 using PMS_API.Repository;
 using PMS_API.SupportModel;
 using PMS_API.ViewModels;
 using System.Linq;
+using System.Net.Mail;
 using System.Runtime.Intrinsics.Arm;
 
 namespace PMS_API.Services
 {
-
     public class OrganizationService : IOrganizationRepo
     {
-
         private readonly PMSContext _context;
         private readonly IEmailService _emailservice;
-        public OrganizationService(PMSContext context , IEmailService emailService)
+        public OrganizationService(PMSContext context, IEmailService emailService)
         {
             _context = context;
-            _emailservice = emailService;   
+            _emailservice = emailService;
         }
-
-        public int? AddEmployee(EmployeeVM model)
+        public string? AddEmployee(EmployeeVM model)
         {
-
             EmployeeModule module = new EmployeeModule();
-            ManagersTbl managersTbl= new ManagersTbl();
-
-
+            ManagersTbl managersTbl = new ManagersTbl();
 
             var existingUser = _context.EmployeeModules.FirstOrDefault(x => x.Email == model.Email);
             if (existingUser == null)
             {
+                module.EmployeeIdentity = model.EmployeeIdentity;
                 module.Name = model.Name;
                 module.Email = model.Email;
                 module.DepartmentId = model.DepartmentId;
@@ -42,7 +42,7 @@ namespace PMS_API.Services
                 module.DateOfJoining = model.DateOfJoining;
                 module.PriviousExperience = model.PriviousExperience;
                 module.FirstLevelReportingManager = model.FirstLevelReportingManager;
-                module.SecondLevelReportingManager = model.SecondLevelReportingManager;
+                module.SecondLevelReportingManager = _context.ManagersTbls.First(c => c.ManagerId == model.FirstLevelReportingManager).Reporting1Person;
                 module.DateOfBirth = model.DateOfBirth;
                 module.Age = model.Age;
                 module.Gender = model.Gender;
@@ -54,171 +54,109 @@ namespace PMS_API.Services
                 module.AddTime = DateTime.Now;
                 module.IsDeleted = false;
                 module.IsActivated = false;
+                module.Salary = model.Salary;
 
                 _context.EmployeeModules.Add(module);
                 _context.SaveChanges();
-                if(module.DesignationId == 2005)
+                if (module.DepartmentId == 102)
                 {
                     managersTbl.EmployeeId = module.EmployeeId;
                     managersTbl.ManagerName = module.Name;
-                    managersTbl.Email= module.Email;
+                    managersTbl.Email = module.Email;
                     managersTbl.ContactNumber = module.WorkPhoneNumber;
-                    managersTbl.IsDeleted = false;  
+                    managersTbl.Reporting1Person = module.FirstLevelReportingManager;
+                    managersTbl.Reporting2Person = _context.ManagersTbls.First(s => s.ManagerId == model.FirstLevelReportingManager).Reporting1Person;
+                    managersTbl.IsDeleted = false;
                     managersTbl.IsActivated = true;
-                    _context.ManagersTbls.Add(managersTbl); 
+                    _context.ManagersTbls.Add(managersTbl);
                     _context.SaveChanges();
-                    
                 }
 
-                return module.EmployeeId;
+                 return module.EmployeeIdentity;
             }
             else
             {
-                return 0;
+                return "Error";
             }
-
-        }
-
-        public string AddUserLevel(int? designationId, int? departmentId, int? employeeId)
+        }        
+        public string AddUserLevel(string employeeIdentity , EmployeeVM employee)
         {
-
-            var weightages = _context.Weightages.Where(x => x.DepartmentId.Equals(departmentId) && x.DesignationId.Equals(designationId)).ToList();
-
-            foreach (var weightage in weightages)
+            if(employee.skills.Count > 0)
             {
-                UserLevel module = new UserLevel();
-                module.EmployeeId = employeeId;
-                module.SkillId = weightage.SkillId;
-                module.Level = 0;
-                module.Weightage = weightage.Weightage1;
-                _context.UserLevels.Add(module);
-                _context.SaveChanges();
+                foreach(var skill in employee.skills)
+                {
+                    var Id =_context.EmployeeModules.Where( x => x.EmployeeIdentity == employeeIdentity ).FirstOrDefault(); 
+                    UserLevel module = new UserLevel();
+                    module.EmployeeId = Id.EmployeeId;
+                    module.SkillId = skill.SkillID;
+                    module.Level = 0;
+                    module.Weightage = 0;
+                    _context.UserLevels.Add(module);
+                    _context.SaveChanges();
+                }
+                return "Created";
             }
-
-            return "Created";
-        }
-
+            return "Noskill";
+        }    
         public void AddDepartment(DepartmentVM model)
         {
             Department department = new Department();
-
             department.DepartmentName = model.DepartmentName;
             department.AddTime = DateTime.Now;
-
             _context.Departments.Add(department);
-        }
-
-        public void AddDesignation(DesignationVM model)
+        } 
+        public void AddDesignations(Designation1VM model)
         {
-            Designation designation = new Designation();
-
-            designation.DesignationName = model.DesignationName;
-            designation.AddTime = DateTime.Now;
-
-            _context.Designations.Add(designation);
+            Designation1 designation1 = new Designation1();
+            designation1.DepartmentId= model.DepartmentId;
+            designation1.DesignationName= model.DesignationName;
+            designation1.AddTime = DateTime.Now;
+            _context.Designations1.Add(designation1);
         }
-
-        public void AddSkill(SkillsVM model)
-        {
-            Skill skill = new Skill();
-
-            skill.SkillName = model.SkillName;
-
-            _context.Skills.Add(skill);
-        }
-
-        public string AddAdditionalSkills(UserLevelVM level)
-        {
-           
-            var users = _context.EmployeeModules.Where(x => x.EmployeeId == level.EmployeeId && x.IsDeleted != true).FirstOrDefault();
-            if(users != null)
-            {
-                var lvl = _context.UserLevels.Where(x => x.SkillId == level.SkillId && x.EmployeeId == level.EmployeeId).FirstOrDefault();
-                if (lvl != null)
-                {
-                    return "Skill Already Exist";
-                }
-
-                UserLevel user = new UserLevel();
-
-                user.EmployeeId = level.EmployeeId;
-                user.SkillId = level.SkillId;
-                user.Level = 0;
-                user.Weightage = level.Weightage;
-
-                _context.UserLevels.Add(user);
-                return "Success";
-            }
-            return "User Not exists";
-          
-        }
-
-        public void AddSkillWeightage(WeightageVM weightage)
-        {
-            Weightage weightage1 = new Weightage();
-
-            weightage1.DepartmentId = weightage.DepartmentId;
-            weightage1.DesignationId = weightage.DesignationId;
-            weightage1.SkillId = weightage.SkillId;
-            weightage1.Weightage1 = weightage.Weightage1;
-
-            _context.Weightages.Add(weightage1);
-        }
-
-        public string UpdateEmployee(int id, EmployeeVM model)
+        public string UpdateEmployee(string EmployeeIdentity, EmployeeVM model)
         {
             try
             {
-               // var existingUser = _context.EmployeeModules.FirstOrDefault(x => x.Email == model.Email);
-                //if (existingUser == null)
-                //{
-                    var Emp = _context.EmployeeModules.Where(s => s.EmployeeId == id && s.IsDeleted != true).FirstOrDefault();
-                    if (Emp != null)
-                    {
-                        Emp.Name = model.Name;
-                        Emp.Email = model.Email;
-                        Emp.DepartmentId = model.DepartmentId;
-                        Emp.DesignationId = model.DesignationId;
-                        Emp.RoleId = model.RoleId;
-                        Emp.DateOfJoining = model.DateOfJoining;
-                        Emp.PriviousExperience = model.PriviousExperience;
-                        Emp.FirstLevelReportingManager = model.FirstLevelReportingManager;
-                        Emp.SecondLevelReportingManager = model.SecondLevelReportingManager;
-                        Emp.DateOfBirth = model.DateOfBirth;
-                        Emp.Age = model.Age;
-                        Emp.Gender = model.Gender;
-                        Emp.MaritalStatus = model.MaritalStatus;
-                        Emp.WorkPhoneNumber = model.WorkPhoneNumber;
-                        Emp.PersonalPhone = model.PersonalPhone;
-                        Emp.PersonalEmail = model.PersonalEmail;
-                        Emp.ProfilePicture = model.ProfilePicture;
-                        Emp.ModifiedTime = DateTime.Now;
+               var Emp = _context.EmployeeModules.Where(s => s.EmployeeIdentity == EmployeeIdentity && s.IsDeleted != true).FirstOrDefault();
+                if (Emp != null)
+                {
+                    Emp.Name = model.Name;
+                    Emp.Email = model.Email;
+                    Emp.DepartmentId = model.DepartmentId;
+                    Emp.DesignationId = model.DesignationId;
+                    Emp.RoleId = model.RoleId;
+                    Emp.DateOfJoining = model.DateOfJoining;
+                    Emp.PriviousExperience = model.PriviousExperience;
+                    Emp.FirstLevelReportingManager = model.FirstLevelReportingManager;
+                    //Emp.SecondLevelReportingManager = model.SecondLevelReportingManager;
+                    Emp.DateOfBirth = model.DateOfBirth;
+                    Emp.Age = model.Age;
+                    Emp.Gender = model.Gender;
+                    Emp.MaritalStatus = model.MaritalStatus;
+                    Emp.WorkPhoneNumber = model.WorkPhoneNumber;
+                    Emp.PersonalPhone = model.PersonalPhone;
+                    Emp.PersonalEmail = model.PersonalEmail;
+                    Emp.ProfilePicture = model.ProfilePicture;
+                    Emp.Salary= model.Salary;
+                    Emp.ModifiedTime = DateTime.Now;
 
-                        _context.EmployeeModules.Update(Emp);
-                        _context.SaveChanges();
+                    _context.EmployeeModules.Update(Emp);
+                    _context.SaveChanges();
 
-
-                        return "Updated";
-                    }
-                    else
-                    {
-                        return "User Not Exists";
-                    }
-                //}
-                //else
-                //{
-                //    return "User Already Exists";
-                //}
+                    return "Updated";
+                }
+                else
+                {
+                    return "User Not Exists";
+                }
+               
 
             }
             catch (Exception ex)
             {
                 throw ex;
             }
-
-
         }
-
         public string UpdateDepertment(int id, DepartmentVM department)
         {
             try
@@ -243,7 +181,6 @@ namespace PMS_API.Services
             }
 
         }
-
         public string UpdateDesignation(int id, DesignationVM designation)
         {
             try
@@ -266,210 +203,188 @@ namespace PMS_API.Services
             {
                 throw ex;
             }
+        }
+        public string AddDeveloper(Developer developer)
+        {
+            Developer dev = new Developer();    
 
+            dev.DeveloperName = developer.DeveloperName;    
+            _context.Developers.Add(developer); 
+            _context.SaveChanges();
+            return "ok";
         }
 
-        public string UpdateSkill(int id, SkillsVM skills)
+        public string AddTester(Tester tester)
         {
-            try
-            {
-                var skill = _context.Skills.Where(s => s.SkillId == id).FirstOrDefault();
-                if (skill != null)
-                {
-                    skill.SkillName = skills.SkillName;
+            Tester test = new Tester();
 
-                    _context.Skills.Update(skill);
-                    return "Updated";
-                }
-                else
-                {
-                    return "Skill Not Exists";
-                }
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            test.TesterName = tester.TesterName;
+            _context.Testers.Add(test);
+            _context.SaveChanges();
+            return "ok";
         }
 
-
-        public string ReqForUpdateLvl(UserLevelVM level)
+        public List<Developer> GetDevelpoer()
         {
-            var user = _context.EmployeeModules.Where(x => x.EmployeeId.Equals(level.EmployeeId) && x.IsDeleted.Equals(false)).FirstOrDefault();
+            return _context.Developers.ToList();
+        }
+        public List<Tester> GetTester()
+        {
+            return _context.Testers.ToList();
+        }
+        
+        public void EmailDelivery()
+        {
+            var job_1 = _context.ResponseEmails.Where(x => x.IsActive == true && x.IsDeliverd== false && x.Status== true).FirstOrDefault();
+            var job_2 = _context.ResponseEmails.Where(x => x.IsActive == true && x.IsDeliverd == false && x.Status == false).FirstOrDefault();            
+            var job_3 = _context.ResponseEmails.Where(x => x.IsActive == true && x.IsNotified == false && x.Status == true).FirstOrDefault();          
+            var job_4 = _context.ResponseEmails.Where(x => x.IsActive == true && x.IsDeliverd == true && x.IsNotified == true).FirstOrDefault();
 
-            if (user != null)
+            if(job_1 != null)
             {
-                var data = from emp in _context.EmployeeModules
-                           join man in _context.ManagersTbls
-                           on emp.SecondLevelReportingManager equals man.ManagerId
-
-                           where emp.EmployeeId == level.EmployeeId && emp.IsDeleted != true
-                           select new { emp, man };
-
-                var mail = data.FirstOrDefault();
-
-                
-
-                 RequestForApproved request = new RequestForApproved();
-
-                    request.EmployeeId = level.EmployeeId;
-                    request.RequestCreatedById = null;
-                    request.RequestCreatedBy = null;
-                    request.RequestCreatedAt = DateTime.Now;
-                    request.Reason = level.Reason;
-                    request.Comments = level.Description;
-                    request.IsActivated = true;
-                   request.IsDeliverd= false;
-
-                    _context.RequestForApproveds.Add(request);
-                    _context.SaveChanges();
-                
-
-                var msg = "(Req_ID "+request.ReqId+".)"+" "+"</br>"+"Hi " + mail.man.ManagerName + " I Would Like To Improve " + user.Name + "'s SkillLevel to Next Level For " +"Reason:"+"</br>"+ "<h3>" + level.Reason + "Descriptions:" +"</br>" + "<h3>" + "  " + level.Description + " Kindly Approve This"+"</br>" + "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
-                var message = new Message(new string[] { mail.man.Email }, "Requst For Level Update", msg.ToString());
+                var userlvl = _context.UserLevels.Where(x => x.EmployeeId == job_1.EmployeeId && x.SkillId == job_1.Skillid).FirstOrDefault();
+                var msg = "(Req_ID " + job_1.ResponseId + ".)" + " " + "</br>" + "Hi " + job_1.FirstLvlManagerName + " Your Update Request(" + job_1.ReqId + ") has Approved";
+                var message = new Message(new string[] { job_1.FirstlvlManagerMail }, "Approval Message", msg.ToString(),null);
                 var a = _emailservice.SendEmail(message);
-
-                if(a == "ok")
+                if( a == "ok")
                 {
-                    var abc = _context.RequestForApproveds.Where(x => x.ReqId == request.ReqId).FirstOrDefault();
-
-                    abc.IsDeliverd = true;
-                    _context.RequestForApproveds.Update(abc);
+                    job_1.IsDeliverd= true;
+                    job_1.DeliverdAt= DateTime.Now;
+                    _context.ResponseEmails.Update(job_1);
+                    _context.SaveChanges();
+                }              
+                if(job_1.IsUpdated == false )
+                {
+                  var b = userlvl.Level+1; 
+                 
+                    userlvl.Level = b;   
+                    job_1.DeliverdAt = DateTime.Now;
+                    job_1.IsUpdated= true;
+                    _context.ResponseEmails.Update(job_1);
+                    _context.SaveChanges();
+                    _context.UserLevels.Update(userlvl); 
+                    _context.SaveChanges();
+                    int? employeeId = job_1.EmployeeId;
+                    SkillService skl = new SkillService(_context, _emailservice);
+                    skl.PotentialCal(employeeId);
+                }
+            }
+            if(job_2 != null)
+            {
+                var msg = "(Req_ID " + job_2.ResponseId + ".)" + " " + "</br>" + "Hi " + job_2.FirstLvlManagerName + " Your Update Request(" + job_2.ReqId + ") has been Rejected for some Reason";
+                var message = new Message(new string[] { job_2.FirstlvlManagerMail }, "Approval Message", msg.ToString(), null);
+                var a = _emailservice.SendEmail(message);
+                if(a == "ok")
+                { 
+                    job_2.IsDeliverd = true;
+                    job_2.DeliverdAt= DateTime.Now;
+                    job_2.IsNotified= true;
+                    _context.ResponseEmails.Update(job_2);
                     _context.SaveChanges();
                 }
 
-                return "Ok";
             }
-            return "Error";
-        }
-
-        public string LevlelApprovedSuccess(int reqid, bool status)
-        {
-
-            var user = _context.RequestForApproveds.Where( x => x.ReqId==reqid).FirstOrDefault();
-            
-            
-
-            return " ";
-        }
-
-        public string UpdateLevelForEmployee(UserLevelVM level)
-        {
-            var user = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.EmployeeId == level.EmployeeId).FirstOrDefault();
-            if (user == null)
+            if(job_3 != null)
             {
-                return "User Not Exist";
-            }
-            var weightages = _context.UserLevels.Where(x => x.EmployeeId.Equals(level.EmployeeId) && x.SkillId.Equals(level.SkillId)).FirstOrDefault();
-
-            if (weightages != null)
-            {
-                weightages.Level = level.Level;
-                _context.UserLevels.Update(weightages);
-                return "Updated";
-            }
-                 
-            return "Error";
-        }
-
-        public string UpdateSkillWeightage(WeightageVM weightage)
-        {
-
-            try
-            {
-                var Weight = _context.Weightages.Where(s => s.SkillId == weightage.SkillId && s.DesignationId == weightage.DesignationId && s.DepartmentId == weightage.DepartmentId).FirstOrDefault();
-                if (Weight != null)
+                var msg = " Hi " + job_3.Employeename + " Your Skill Level in " + job_3.SkillName + " To The Next Level By " + job_3.FirstLvlManagerName;
+                var message = new Message(new string[] { job_3.Employeemail }, "Skill Updated", msg.ToString(), null);
+                var a = _emailservice.SendEmail(message);
+                if (a == "ok")
                 {
-                    Weight.Weightage1 = weightage.Weightage1;
+                    job_3.IsNotified = true;
+                    job_3.NotifiedAt= DateTime.Now;
+                    _context.ResponseEmails.Update(job_3);
+                    _context.SaveChanges();
+                }
 
-                    _context.Weightages.Update(Weight);
-                    return "Updated";
-                }
-                else
-                {
-                    return "Skill Not Exists";
-                }
             }
-            catch (Exception ex)
+
+            if(job_4 != null)
             {
-                throw ex;
+                job_4.IsActive = false;
+                _context.ResponseEmails.Update(job_4);
+                _context.SaveChanges();
             }
         }
-
-        public List<EmployeeModule> EmployeeList()
+        //public List<EmployeeModule> EmployeeList()
+        //{
+        //    return _context.EmployeeModules.Where(s => s.IsDeleted != true && s.IsActivated != false).ToList();
+        //}
+        public dynamic EmployeeList()
         {
+            List<TestEmployeeList> testlist = new List<TestEmployeeList>();
+            TestEmployeeVM testemp = new TestEmployeeVM();
 
-            return _context.EmployeeModules.Where(s => s.IsDeleted != true && s.IsActivated != false).ToList();
-
+            var report1 = _context.EmployeeModules.Where(s => s.IsDeleted == false && s.IsActivated == true).ToList();
+            // var toplevel = _context.TopManagements.FirstOrDefault(s => s.Id == 1);
+            foreach (var report in report1)
+            {
+                TestEmployeeList test = new TestEmployeeList();
+                var secondmanager = report1.Where(s => s.SecondLevelReportingManager == report.SecondLevelReportingManager).ToList();
+                // EmployeeVM employeeVM = new EmployeeVM();
+                test.FirstLevelReportingManager = report.FirstLevelReportingManager;
+                test.FirstLevelReportingManagerName = _context.ManagersTbls.First(w => w.ManagerId == report.FirstLevelReportingManager).ManagerName;
+                test.SecondLevelReportingManager = report.SecondLevelReportingManager;
+                test.SecondLevelReportingManagerName = _context.ManagersTbls.First(w => w.ManagerId == report.SecondLevelReportingManager).ManagerName;
+                testemp = new TestEmployeeVM();
+                testemp.EmployeeId = report.EmployeeId;
+                testemp.Name = report.Name;
+                testemp.Age = report.Age;
+                testemp.DateOfBirth = report.DateOfBirth;
+                testemp.DateOfJoining = report.DateOfJoining;
+                testemp.DepartmentId = report.DepartmentId;
+                testemp.DepartmentName = _context.Departments.First(s => s.DepartmentId == report.DepartmentId).DepartmentName;
+                testemp.DesignationId = report.DesignationId;
+                testemp.DesignationName = _context.Designations.First(s => s.DesignationId == report.DesignationId).DesignationName;
+                testemp.Gender = report.Gender;
+                testemp.MaritalStatus = report.MaritalStatus;
+                testemp.WorkPhoneNumber = report.WorkPhoneNumber;
+                testemp.PersonalEmail = report.PersonalEmail;
+                testemp.PersonalPhone = report.PersonalPhone;
+                testemp.PriviousExperience = report.PriviousExperience;
+                testemp.ProfilePicture = report.ProfilePicture;
+                test.EmployeeVMs = testemp;
+                testlist.Add(test);
+            }
+            return testlist;
         }
-
-        public EmployeeModule EmployeeById(int id)
+        public dynamic EmployeeHierachy(int employeeId)
         {
-            return _context.EmployeeModules.Where(s => s.EmployeeId == id && s.IsDeleted != true).FirstOrDefault();
-        }
+            ManagerVM manager = new ManagerVM();
+            //  var toplevel = _context.TopManagements.FirstOrDefault(x => x.Id == 1);
+            var emp = _context.EmployeeModules.FirstOrDefault(x => x.EmployeeId == employeeId);
+            if (emp != null)
+            {
+                manager = new ManagerVM();
+                manager.EmployeeId = emp.EmployeeId;
+                manager.EmployeeName = emp.Name;
+                manager.secondLevelManagerId = emp.SecondLevelReportingManager;
+                manager.SecondLevelManagerName = _context.ManagersTbls.First(s => s.ManagerId == emp.SecondLevelReportingManager).ManagerName;
+                manager.FirstLevelManagerId = emp.FirstLevelReportingManager;
+                manager.FirstLevelManagerName = _context.ManagersTbls.First(s => s.ManagerId == emp.FirstLevelReportingManager).ManagerName;
 
+            }
+            return manager;
+        }
+        public EmployeeModule EmployeeById(string EmployeeIdentity)
+        {
+            return _context.EmployeeModules.Where(s => s.EmployeeIdentity == EmployeeIdentity && s.IsDeleted != true).FirstOrDefault();
+        }
         public List<EmployeeModule> EmployeeByDepartment(int id)
         {
             return _context.EmployeeModules.Where(X => X.DepartmentId == id && X.IsDeleted != true).ToList();
         }
-
         public List<Department> DepartmentModule()
         {
             return _context.Departments.ToList();
         }
-
-        public List<Skill> SkilsList()
-        {
-            return _context.Skills.ToList();
-        }
-
-        public List<Weightage> SkillbyDepartmentID(int id)
-        {
-            return _context.Weightages.Where(x => x.DepartmentId == id).ToList();
-        }
-
         public List<Designation> DesignationModule()
         {
             return _context.Designations.ToList();
         }
-
-        public IQueryable<GetEmployeeSkillsByIdVM> GetEmployeeSkillsById(int id)
+        public string DeleteEmployee(string EmployeeIdentity)
         {
-             //var skill = _context.UserLevels.Where(x => x.EmployeeId.Equals(id)).FirstOrDefault();
-
-            //var deleted = _context.
-
-            var join = from emp in _context.EmployeeModules
-                       join lvl in _context.UserLevels
-                       on emp.EmployeeId equals lvl.EmployeeId
-                       join skl in _context.Skills
-                       on lvl.SkillId equals skl.SkillId
-                       join dep in _context.Departments
-                       on emp.DepartmentId equals dep.DepartmentId
-                       join des in _context.Designations
-                       on emp.DesignationId equals des.DesignationId where emp.EmployeeId== id && emp.IsDeleted != true
-                       select new GetEmployeeSkillsByIdVM
-                       {
-                           EmployeeId = emp.EmployeeId,
-                           EmpName = emp.Name,
-                           Skill = skl.SkillName,
-                           SkillId = skl.SkillId,
-                           DepartmenName = dep.DepartmentName,
-                           DepartmentId = dep.DepartmentId,
-                           DesignationId = des.DesignationId,
-                           DesignationName = des.DesignationName,
-                           Level = lvl.Level,
-                           Weightage = lvl.Weightage,
-                           PotentialLevel = emp.PotentialLevel
-
-                       };
-
-            return join;
-        }
-
-        public string DeleteEmployee(int EmployeeId)
-        {
-            var DelEmp = _context.EmployeeModules.Where(s => s.EmployeeId == EmployeeId).FirstOrDefault();
+            var DelEmp = _context.EmployeeModules.Where(s => s.EmployeeIdentity == EmployeeIdentity).FirstOrDefault();
             if (DelEmp != null)
             {
                 DelEmp.IsDeleted = true;
@@ -478,24 +393,10 @@ namespace PMS_API.Services
             }
 
             return "Error";
-        }
-
-        public string DeleteSkillbyEmp(int EmployeeId, int SkillId)
-        {
-            var DelskillbyEmp = _context.UserLevels.Where(s => s.EmployeeId == EmployeeId && s.SkillId == SkillId).FirstOrDefault();
-            if (DelskillbyEmp != null)
-            {
-                _context.UserLevels.Remove(DelskillbyEmp);
-                return "Employee Skill Removed";
-            }
-            return "Error";
-        }
-
+        }   
         public dynamic FindRequiredEmployee(FindEmployee find)
         {
-
             List<filterEmployee> skills = new List<filterEmployee>();
-
             foreach (var skillId in find.Skillid)
             {
                 var skill = from lvl in _context.UserLevels
@@ -515,16 +416,101 @@ namespace PMS_API.Services
                             };
                 skills.AddRange(skill);
             }
-
             return skills.ToList();
-        }
-
+        }          
         public void Save()
         {
             _context.SaveChanges();
         }
 
 
+        //public string AddUserLevel(int? designationId, int? departmentId, int? employeeId)
+        //{
+        //    var weightages = _context.Weightages.Where(x => x.DepartmentId.Equals(departmentId) && x.DesignationId.Equals(designationId)).ToList();
+
+        //    foreach (var weightage in weightages)
+        //    {
+        //        UserLevel module = new UserLevel();
+        //        module.EmployeeId = employeeId;
+        //        module.SkillId = weightage.SkillId;
+        //        module.Level = 0;
+        //        module.Weightage = weightage.Weightage1;
+        //        _context.UserLevels.Add(module);
+        //        _context.SaveChanges();
+        //    }
+        //    return "Created";
+        //}       
+
+        //public string DeleteSkillbyEmp(string EmployeeIdentity, int SkillId)
+        //{
+        //    var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity).FirstOrDefault();
+        //    var DelskillbyEmp = _context.UserLevels.Where(s => s.EmployeeId == Id.EmployeeId && s.SkillId == SkillId).FirstOrDefault();
+        //    if (DelskillbyEmp != null)
+        //    {
+        //        _context.UserLevels.Remove(DelskillbyEmp);
+        //        return "Employee Skill Removed";
+        //    }
+        //    return "Error";
+        //}
+
+        //public string UpdateLevelForEmployee(UserLevelVM level)
+        //{
+        //    var user = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.EmployeeIdentity == level.EmployeeIdentity).FirstOrDefault();
+        //    if (user == null)
+        //    {
+        //        return "User Not Exist";
+        //    }
+
+        //    var weightages = _context.UserLevels.Where(x => x.EmployeeId.Equals(user.EmployeeId) && x.SkillId.Equals(level.SkillId)).FirstOrDefault();
+        //    if (weightages != null)
+        //    {
+        //        weightages.Level = level.Level;
+        //        _context.UserLevels.Update(weightages);
+        //        return "Updated";
+        //    }
+        //    return "Error";
+        //}
+
+
+        //public string UpdateSkillWeightage(WeightageVM weightage)
+        //{
+        //    try
+        //    {
+        //        var Weight = _context.Weightages.Where(s => s.SkillId == weightage.SkillId && s.DesignationId == weightage.DesignationId && s.DepartmentId == weightage.DepartmentId).FirstOrDefault();
+        //        if (Weight != null)
+        //        {
+        //            Weight.Weightage1 = weightage.Weightage1;
+        //            _context.Weightages.Update(Weight);
+        //            return "Updated";
+        //        }
+        //        else
+        //        {
+        //            return "Skill Not Exists";
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw ex;
+        //    }
+        //}
+
+        //public void AddDesignation(DesignationVM model)
+        //{
+        //    Designation designation = new Designation();
+        //    designation.DesignationName = model.DesignationName;
+        //    designation.AddTime = DateTime.Now;
+        //    _context.Designations.Add(designation);
+        //}
+
+        //public void AddSkillWeightage(WeightageVM weightage)
+        //{
+        //    Weightage weightage1 = new Weightage();
+        //    weightage1.DepartmentId = weightage.DepartmentId;
+        //    weightage1.DesignationId = weightage.DesignationId;
+        //    weightage1.SkillId = weightage.SkillId;
+        //    weightage1.Weightage1 = weightage.Weightage1;
+        //    _context.Weightages.Add(weightage1);
+        //}
     }
 }
 

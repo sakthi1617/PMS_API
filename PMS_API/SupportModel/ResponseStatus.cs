@@ -4,5 +4,6 @@
     {
         public string? status { get; set; }
         public string? message { get; set; }
+        public int? statusCode { get; set; }
     }
 }

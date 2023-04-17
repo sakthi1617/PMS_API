@@ -2,8 +2,9 @@
 {
     public class GoalVM
     {
-      //  public int GoalId { get; set; }
-        public int? EmployeeId { get; set; }
+        public int GoalId { get; set; }
+        public string? EmployeeIdentity { get; set; }
+       // public int? EmployeeId { get; set; }
         public string? Goalname { get; set; }
         public string? GoalDescription { get; set; }
       //  public string? Assignedby { get; set; }

@@ -9,15 +9,12 @@ namespace PMS_API.Services
     public class PasswordService : IPasswordService
     {
         private readonly PMSContext _context;
-
         public PasswordService(PMSContext context)
         {
             _context = context;
         }
-
         public string GeneratePassword(string Email, ResetPassword request)
         {
-
             var user = _context.EmployeeModules.FirstOrDefault(u => u.Email == Email);
             if (user == null)
             {
@@ -37,12 +34,9 @@ namespace PMS_API.Services
             {
                 return "Your Account has Already Activated";
             }
-
         }
-
         public string Forgetpassword(string Email, ResetPassword request)
         {
-
             var user = _context.EmployeeModules.FirstOrDefault(u => u.Email == Email);
             if (user == null)
             {
@@ -62,10 +56,7 @@ namespace PMS_API.Services
             {
                 return "Your Account has Deactivated";
             }
-
         }
-
-
         public void HashPassword(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             using (var hmac = new HMACSHA512())
@@ -74,7 +65,6 @@ namespace PMS_API.Services
                 passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
             }
         }
-
         public bool VerifyPasssword(string password, byte[] passwordHash, byte[] passwordSalt)
         {
             using (var hmac = new HMACSHA512(passwordSalt))

@@ -7,14 +7,16 @@ namespace PMS_API.Models
     {
         public Skill()
         {
-            Weightages = new HashSet<Weightage>();
+            RequestForApproveds = new HashSet<RequestForApproved>();
             UserLevels = new HashSet<UserLevel>();
+            Weightages = new HashSet<Weightage>();
         }
 
         public int SkillId { get; set; }
         public string? SkillName { get; set; }
 
-        public virtual ICollection<Weightage> Weightages { get; set; }
+        public virtual ICollection<RequestForApproved> RequestForApproveds { get; set; }
         public virtual ICollection<UserLevel> UserLevels { get; set; }
+        public virtual ICollection<Weightage> Weightages { get; set; }
     }
 }

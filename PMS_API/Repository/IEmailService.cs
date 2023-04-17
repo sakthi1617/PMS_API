@@ -6,6 +6,5 @@ namespace PMS_API.Repository
     public interface IEmailService
     {
         string SendEmail(Message message);
-
     }
 }
