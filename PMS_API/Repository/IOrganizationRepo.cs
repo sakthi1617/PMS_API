@@ -27,6 +27,7 @@ namespace PMS_API.Repository
         public void EmailDelivery();     
         public dynamic FindRequiredEmployee(FindEmployee find);  
         public string AddDeveloper(Developer developer);
+        public string AddTester(Tester tester);
         public void Save();
 
         //  public string AddUserLevel(int? designationId, int? departmentId, int? employeeId);
