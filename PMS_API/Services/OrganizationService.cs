@@ -223,6 +223,16 @@ namespace PMS_API.Services
             _context.SaveChanges();
             return "ok";
         }
+
+        public List<Developer> GetDevelpoer()
+        {
+            return _context.Developers.ToList();
+        }
+        public List<Tester> GetTester()
+        {
+            return _context.Testers.ToList();
+        }
+        
         public void EmailDelivery()
         {
             var job_1 = _context.ResponseEmails.Where(x => x.IsActive == true && x.IsDeliverd== false && x.Status== true).FirstOrDefault();

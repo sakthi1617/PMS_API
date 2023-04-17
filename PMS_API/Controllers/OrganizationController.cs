@@ -194,6 +194,62 @@ namespace PMS_API.Controllers
         }
         #endregion
 
+        #region Get all Developer
+        [HttpGet]
+        [Route("GetDevelpoer")]
+        public async Task<IActionResult> GetDevelpoer()
+        {
+            
+            try
+            {
+                var result = repository.GetDevelpoer();
+                return Ok(new
+                {
+
+                    list = result,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Developer List.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Get All Tester
+        [HttpGet]
+        [Route("GetTester")]
+        public async Task<IActionResult> GetTester()
+        {
+            
+
+            try
+            {
+                var result = repository.GetTester();
+                return Ok(new
+                {
+
+                    list = result,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Tester List.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
         #region Updating EMployee which wass access only by Admin
         [HttpPut]
         [Route("UpdateEmployee")]
