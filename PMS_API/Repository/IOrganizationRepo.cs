@@ -28,6 +28,9 @@ namespace PMS_API.Repository
         public dynamic FindRequiredEmployee(FindEmployee find);  
         public string AddDeveloper(Developer developer);
         public string AddTester(Tester tester);
+
+        public List<Developer> GetDevelpoer();
+        public List<Tester> GetTester();
         public void Save();
 
         //  public string AddUserLevel(int? designationId, int? departmentId, int? employeeId);
