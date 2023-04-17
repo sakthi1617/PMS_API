@@ -1,497 +1,824 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Hangfire.Logging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1.Ocsp;
 using PMS_API.Data;
+using PMS_API.LogHandling;
 using PMS_API.Models;
+using PMS_API.Reponse;
 using PMS_API.Repository;
 using PMS_API.SupportModel;
 using PMS_API.ViewModels;
+using System.Linq;
+using System.Net.Mail;
 using static System.Net.WebRequestMethods;
 
 namespace PMS_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    
     public class OrganizationController : ControllerBase
     {
-
-
         private readonly IOrganizationRepo repository;
         private readonly IEmailService _emailservice;
-
-
         public OrganizationController(IOrganizationRepo _repository, IEmailService emailservice)
         {
             repository = _repository;
             _emailservice = emailservice;
         }
 
-        [Authorize(Roles ="Admin")]
-      
+        #region Adding Employee which was access only by Admin
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [Route("AddEmployee")]
-        public async Task<IActionResult> addEmployee(EmployeeVM employeeModule)
+        public async Task<IActionResult> addEmployee([FromBody]EmployeeVM employeeModule)
         {
-            if (ModelState.IsValid)
+            try
             {
-                var employeeCreationResult = repository.AddEmployee(employeeModule);
-
-                if (employeeCreationResult != 0 && employeeCreationResult != null)
+                if (ModelState.IsValid)
                 {
+                    var employeeCreationResult = repository.AddEmployee(employeeModule);
 
-                    var userLevelResult = repository.AddUserLevel(employeeModule.DesignationId, employeeModule.DepartmentId, employeeCreationResult);
-                    if (userLevelResult == "Created")
+                    if (employeeCreationResult != "Error" && employeeCreationResult != null)
                     {
-                        var msg = " Hi " + employeeModule.Name + "" + "your Account created Succesfully To set your password, please click the following link: https://localhost:7099/api/OrganizationAuth/ResetPassword?Email= "+employeeModule.Email;
-                        var message = new Message(new string[] { employeeModule.Email }, "Welcome To PMS", msg.ToString());
-                        _emailservice.SendEmail(message);
 
-                        return StatusCode(StatusCodes.Status201Created,
-                        new ResponseStatus { status = "Success", message = "Employee Added Successfully." });
+                        var userLevelResult = repository.AddUserLevel(employeeCreationResult,employeeModule);
+                        if (userLevelResult == "Created")
+                        {
+                            //var files = Request.Form.Files.Any() ? Request.Form.Files : new FormFileCollection();
+                            var msg = " Hi " + employeeModule.Name + "" + "your Account created Succesfully To set your password, please click the following link: https://localhost:7099/api/OrganizationAuth/ResetPassword?Email= " + employeeModule.Email;
+                            var message = new Message(new string[] { employeeModule.Email }, "Welcome To PMS", msg.ToString(), null);
+                            _emailservice.SendEmail(message);
+
+                            return StatusCode(StatusCodes.Status201Created,
+                            new ResponseStatus { status = "Success", message = "Employee Added Successfully.", statusCode = StatusCodes.Status201Created });
+                        }
+                        else
+                        {
+                            return StatusCode(StatusCodes.Status400BadRequest,
+                              new ResponseStatus { status = "Error", message = "Something Error" , statusCode = StatusCodes.Status400BadRequest });
+                        }
                     }
                     else
                     {
                         return StatusCode(StatusCodes.Status400BadRequest,
-                          new ResponseStatus { status = "Error", message = "Something Error" });
+                   new ResponseStatus { status = "Error", message = "User Already Exists" , statusCode = StatusCodes.Status400BadRequest });
                     }
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status400BadRequest,
-               new ResponseStatus { status = "Error", message = "User Already Exists" });
-                }
 
+                }
+                return StatusCode(StatusCodes.Status400BadRequest,
+                    new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
             }
-            return StatusCode(StatusCodes.Status400BadRequest,
-                new ResponseStatus { status = "Error", message = "Invalid Datas" });
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
         }
+        #endregion
 
-                                                                                                    
-
+        #region Adding Department which was access only by Admin
         [HttpPost]
         [Route("AddDepartment")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddDepartment(DepartmentVM department)
         {
-            if (ModelState.IsValid)
+            try
             {
-                repository.AddDepartment(department);
-                repository.Save();
-                return StatusCode(StatusCodes.Status201Created,
-                   new ResponseStatus { status = "Success", message = "Department Added Successfully" });
-            }
-            return StatusCode(StatusCodes.Status400BadRequest,
-               new ResponseStatus { status = "Error", message = "Invalid Datas" });
-        }
-
-
-        [HttpPost]
-        [Route("AddDesignation")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddDesignation(DesignationVM designation)
-        {
-            if (ModelState.IsValid)
-            {
-                repository.AddDesignation(designation);
-                repository.Save();
-                return StatusCode(StatusCodes.Status201Created,
-                  new ResponseStatus { status = "Success", message = "Designation Added Successfully" });
-            }
-            return StatusCode(StatusCodes.Status400BadRequest,
-             new ResponseStatus { status = "Error", message = "Invalid Datas" });
-        }
-
-        [HttpPost]
-        [Route("AddSkills")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> addSkill(SkillsVM skill)
-        {
-            if (ModelState.IsValid)
-            {
-                repository.AddSkill(skill);
-                repository.Save();
-                return StatusCode(StatusCodes.Status201Created,
-                    new ResponseStatus { status = "Success", message = "Skill Added Successfully" });
-            }
-            return StatusCode(StatusCodes.Status400BadRequest,
-               new ResponseStatus { status = "Error", message = "Invalid Datas" });
-        }
-
-        [HttpPost]
-        [Route("AddAdditionalSkills")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddAdditionalSkills(UserLevelVM level)
-        {
-            if (ModelState.IsValid)
-            {
-             var a =    repository.AddAdditionalSkills(level);
-                switch (a)
+                if (ModelState.IsValid)
                 {
-                    case "Success":
-                        repository.Save();
-                        return StatusCode(StatusCodes.Status201Created,
-                           new ResponseStatus { status = "Success", message = "Skill Added Successfully" });
-
-                    case "Skill Already Exist":
-                        return StatusCode(StatusCodes.Status400BadRequest,
-             new ResponseStatus { status = "Error", message = "Skill Already Added This Employee..." });
-                    case "User Not exists":
-                        return StatusCode(StatusCodes.Status404NotFound,
-             new ResponseStatus { status = "Error", message ="User Not Found" });
+                    repository.AddDepartment(department);
+                    repository.Save();
+                    return StatusCode(StatusCodes.Status201Created,
+                       new ResponseStatus { status = "Success", message = "Department Added Successfully", statusCode = StatusCodes.Status201Created });
                 }
-               
-
+                return StatusCode(StatusCodes.Status400BadRequest,
+                   new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest });
             }
-            return StatusCode(StatusCodes.Status400BadRequest,
-              new ResponseStatus { status = "Error", message = "Invalid Datas" });
-        }
+            catch (Exception ex)
+            {
 
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+
+        #region AddDesignations which was access only by Admin
         [HttpPost]
-        [Route("AddSkillWeightage")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddSkillWeightage(WeightageVM weightage)
+        [Route("AddDesignations")]
+        public async Task<IActionResult> AddDesignations(Designation1VM model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    repository.AddDesignations(model);
+                    repository.Save();
+                    return StatusCode(StatusCodes.Status201Created,
+                      new ResponseStatus { status = "Success", message = "Designation Added Successfully", statusCode = StatusCodes.Status201Created });
+                }
+                return StatusCode(StatusCodes.Status400BadRequest,
+                 new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
+            }
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Adding Developer which was access only by Admin
+        [HttpPost]
+        [Route("AddDeveloper")]         
+        public async Task<IActionResult> AddDeveloper(Developer developer)
+        {
+            if(ModelState.IsValid) 
+            {
+                var a = repository.AddDeveloper(developer);
+                if (a == "ok")
+                {
+                    return StatusCode(StatusCodes.Status201Created,
+                               new ResponseStatus { status = "Success", message = "Data Added Successfully", statusCode = StatusCodes.Status201Created });
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                           new ResponseStatus { status = "Error", message = "Please try again later", statusCode = StatusCodes.Status400BadRequest});
+                }
+            }
+           
+            return Ok();
+        }
+        #endregion
+
+        #region Adding Tester which was access only by Admin
+        [HttpPost]
+        [Route("AddTester")]
+        public async Task<IActionResult> AddTester(Tester tester)
         {
             if (ModelState.IsValid)
             {
-                repository.AddSkillWeightage(weightage);
-                repository.Save();
-                return StatusCode(StatusCodes.Status201Created,
-                     new ResponseStatus { status = "Success", message = "Weightage Added Successfully." });
+                var a = repository.AddTester(tester);
+                if (a == "ok")
+                {
+                    return StatusCode(StatusCodes.Status201Created,
+                               new ResponseStatus { status = "Success", message = "Data Added Successfully", statusCode = StatusCodes.Status201Created });
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                           new ResponseStatus { status = "Error", message = "Please try again later", statusCode = StatusCodes.Status400BadRequest });
+                }
             }
-            return StatusCode(StatusCodes.Status400BadRequest,
-                    new ResponseStatus { status = "Error", message = "Invalid Data." });
-        }
 
+            return Ok();
+        }
+        #endregion
+
+        #region Get all Developer
+        [HttpGet]
+        [Route("GetDevelpoer")]
+        public async Task<IActionResult> GetDevelpoer()
+        {
+            
+            try
+            {
+                var result = repository.GetDevelpoer();
+                return Ok(new
+                {
+
+                    list = result,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Developer List.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Get All Tester
+        [HttpGet]
+        [Route("GetTester")]
+        public async Task<IActionResult> GetTester()
+        {
+            
+
+            try
+            {
+                var result = repository.GetTester();
+                return Ok(new
+                {
+
+                    list = result,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Tester List.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+        #region Updating EMployee which wass access only by Admin
         [HttpPut]
         [Route("UpdateEmployee")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateEmployee(int id, EmployeeVM employee)
+        public async Task<IActionResult> UpdateEmployee(string EmployeeIdentity, EmployeeVM employee)
         {
-
-
-            if (ModelState.IsValid && employee.EmployeeId != null)
+            try
             {
-
-                string a = repository.UpdateEmployee(id, employee);
-
-                switch (a)
+                if (ModelState.IsValid)
                 {
-                    case "Updated":
-                        return StatusCode(StatusCodes.Status201Created,
-                        new ResponseStatus { status = "Success", message = "Employee Details Updated Successfully." });
+                    string a = repository.UpdateEmployee(EmployeeIdentity, employee);
+                    switch (a)
+                    {
+                        case "Updated":
+                            return StatusCode(StatusCodes.Status201Created,
+                            new ResponseStatus { status = "Success", message = "Employee Details Updated Successfully." , statusCode= StatusCodes.Status201Created });
 
-                    case "User Not Exists":
-                        return StatusCode(StatusCodes.Status404NotFound,
-                        new ResponseStatus { status = "Not Found", message = "User Not Exists" });
+                        case "User Not Exists":
+                            return StatusCode(StatusCodes.Status404NotFound,
+                            new ResponseStatus { status = "Not Found", message = "User Not Exists" , statusCode= StatusCodes.Status404NotFound });
+                    }
                 }
 
+                return StatusCode(StatusCodes.Status404NotFound,
+                       new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode= StatusCodes.Status404NotFound });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
             }
 
-            return StatusCode(StatusCodes.Status404NotFound,
-                   new ResponseStatus { status = "Error", message = "Invalid Datas" });
-
         }
+        #endregion
 
+        #region Updating Department which wass access only by Admin
         [HttpPut]
         [Route("UpdateDepertment")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDepertment(int id, DepartmentVM department)
         {
-            if (ModelState.IsValid)
+            try
             {
-                string a = repository.UpdateDepertment(id, department);
-
-                switch (a)
+                if (ModelState.IsValid)
                 {
+                    string a = repository.UpdateDepertment(id, department);
 
-                    case "Updated":
-                        repository.Save();
-                        return StatusCode(StatusCodes.Status201Created,
-                           new ResponseStatus { status = "Success", message = "Department Updated Successfully" });
+                    switch (a)
+                    {
 
-                    case "Department Not Exists":
+                        case "Updated":
+                            repository.Save();
+                            return StatusCode(StatusCodes.Status201Created,
+                               new ResponseStatus { status = "Success", message = "Department Updated Successfully", statusCode = StatusCodes.Status201Created });
 
-                        return StatusCode(StatusCodes.Status404NotFound,
-                           new ResponseStatus { status = "Success", message = "Department Not Exists" });
+                        case "Department Not Exists":
+
+                            return StatusCode(StatusCodes.Status404NotFound,
+                               new ResponseStatus { status = "Success", message = "Department Not Exists",statusCode= StatusCodes.Status404NotFound });
+                    }
 
                 }
-
-
+                return StatusCode(StatusCodes.Status400BadRequest,
+                   new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest });
             }
-            return StatusCode(StatusCodes.Status400BadRequest,
-               new ResponseStatus { status = "Error", message = "Invalid Datas" });
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
 
         }
+        #endregion
 
-
+        #region Updating Designation which was access only by Admin
         [HttpPut]
         [Route("UpdateDesignation")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDesignation(int id, DesignationVM designation)
         {
-            if (ModelState.IsValid)
+            try
             {
-                string a = repository.UpdateDesignation(id, designation);
-
-                switch (a)
+                if (ModelState.IsValid)
                 {
-                    case "Updated":
-                        repository.Save();
-                        return StatusCode(StatusCodes.Status201Created,
-                          new ResponseStatus { status = "Success", message = "Designation Updated Successfully" });
+                    string a = repository.UpdateDesignation(id, designation);
 
-                    case "Designation Not Exists":
+                    switch (a)
+                    {
+                        case "Updated":
+                            repository.Save();
+                            return StatusCode(StatusCodes.Status201Created,
+                              new ResponseStatus { status = "Success", message = "Designation Updated Successfully" , statusCode = StatusCodes.Status201Created });
 
-                        return StatusCode(StatusCodes.Status404NotFound,
-                            new ResponseStatus { status = "Error", message = "Department Not Exists" });
+                        case "Designation Not Exists":
+
+                            return StatusCode(StatusCodes.Status404NotFound,
+                                new ResponseStatus { status = "Error", message = "Department Not Exists", statusCode = StatusCodes.Status404NotFound });
+                    }
                 }
-
-
+                return StatusCode(StatusCodes.Status400BadRequest,
+                       new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest });
             }
-            return StatusCode(StatusCodes.Status400BadRequest,
-             new ResponseStatus { status = "Error", message = "Invalid Datas" });
-        }
-
-        [HttpPut]
-        [Route("UpdateSkill")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateSkill(int id, SkillsVM skill)
-        {
-            if (ModelState.IsValid)
+            catch (Exception ex)
             {
-                string a = repository.UpdateSkill(id, skill);
-                switch (a)
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
                 {
-                    case "Updated":
-                        repository.Save();
-                        return StatusCode(StatusCodes.Status201Created,
-                            new ResponseStatus { status = "Success", message = "Skill Updated SuccessFully" });
-
-                    case "Designation Not Exists":
-
-                        return StatusCode(StatusCodes.Status404NotFound,
-                            new ResponseStatus { status = "Error", message = "Skill Not Exists" });
-                }
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
             }
-            return StatusCode(StatusCodes.Status400BadRequest,
-            new ResponseStatus { status = "Error", message = "Invalid Datas" });
         }
+        #endregion
 
-        [HttpPut]
-        [Route("ReqForUpdateLvl")]
-        public async Task<IActionResult> ReqForUpdateLvl(UserLevelVM level)
-        {
-            if (ModelState.IsValid)
-            {
-                var a = repository.ReqForUpdateLvl(level);
-            }
-            return Ok();
-        }
-
-        [HttpPut]
-        [Route("UpdateLevelForEmployee")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateLevelForEmployee(UserLevelVM level)
-        {
-            if (ModelState.IsValid)
-            {
-                var a = repository.UpdateLevelForEmployee(level);
-
-                switch (a)
-                {
-                    case "Updated":
-                        repository.Save();
-                        return StatusCode(StatusCodes.Status201Created,
-                      new ResponseStatus { status = "Success", message = "Level Updated Successfully." });
-
-                    case "Error":
-                        return StatusCode(StatusCodes.Status404NotFound,
-                           new ResponseStatus { status = "Error", message = "Level not updated" });
-                    case "User Not Exist":
-                        return StatusCode(StatusCodes.Status404NotFound,
-                           new ResponseStatus { status = "Error", message = "User Not Exist" });
-                }
-            }
-            return StatusCode(StatusCodes.Status400BadRequest,
-               new ResponseStatus { status = "Error", message = "Invalid Datas" });
-        }
-
-        [HttpPut]
-        [Route("UpdateSkillWeightage")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateSkillWeightage(WeightageVM weightage)
-        {
-            if (ModelState.IsValid)
-            {
-                var a = repository.UpdateSkillWeightage(weightage);
-                switch (a)
-                {
-                    case "Updated":
-                        repository.Save();
-                        return StatusCode(StatusCodes.Status201Created,
-                            new ResponseStatus { status = "Success", message = "Weightage Updated SuccessFully" });
-
-                    case "Skill Not Exists":
-                        return StatusCode(StatusCodes.Status404NotFound,
-                            new ResponseStatus { status = "Error", message = "Skill Not Exists" });
-                }
-            }
-            return StatusCode(StatusCodes.Status400BadRequest,
-             new ResponseStatus { status = "Error", message = "Invalid Datas" });
-        }
-
+        #region Listing EmployeeDetail which was access by all
         [HttpGet]
         [Route("EmployeeModule")]
-        [Authorize(Roles = "Admin,User")]
+       [Authorize(Roles = "Admin,User")]
+        #region OldEmployeeModule
+        //public async Task<IActionResult> EmployeeModule()
+        //{
+        //    try
+        //    {
+        //        var employeeList = repository.EmployeeList().ToList();
+        //        return Ok(new
+        //        {
+
+        //            list = employeeList,
+        //            ResponseStatus = new ResponseStatus { status = "Success", message = "Employee List.", statusCode = StatusCodes.Status200OK }
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+
+        //        ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+        //        return BadRequest(new FailureResponse<object>
+        //        {
+        //            Error = ex.Message,
+        //            IsreponseSuccess = false
+        //        });
+        //    }
+        //} 
+        #endregion
         public async Task<IActionResult> EmployeeModule()
         {
-            var employeeList = repository.EmployeeList().ToList();
+            try
+            {
 
-            return Ok(employeeList);
+                var result = repository.EmployeeList();
+
+
+                return Ok(new SuccessResponse<object>
+                {
+
+                    ModelData = new
+                    {
+                        
+                        EMployeeDetails = result
+                    },
+                    statusCode = "200",
+                    Response = "ok"
+
+                });
+            }
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+        [HttpGet]
+        [Route("EmployeeHierachy")]
+        public async Task<IActionResult> EmployeeHierachy(int employeeId)
+        {
+            var result = repository.EmployeeHierachy(employeeId);
+            return Ok(new SuccessResponse<object>
+            {
+                ModelData = new
+                {
+                    Managers = result
+                }
+            });
+
         }
 
 
+        #region Listing EmployeeDetail by Id which wass access by all
         [HttpGet]
         [Route("EmployeeById")]
         [Authorize(Roles = "Admin,User")]
-        public async Task<IActionResult> EmployeeById(int id)
+        public async Task<IActionResult> EmployeeById(string EmployeeIdentity)
         {
-            var EmployeeId = repository.EmployeeById(id);
-            if (EmployeeId == null)
+            try
             {
-                return Ok("User Data Unavailable");
+                var EmployeeId = repository.EmployeeById(EmployeeIdentity);
+                if (EmployeeId == null)
+                {
+                    return NotFound(new
+                    {        
+                        ResponseStatus = new ResponseStatus { status = "Error", message = "User Data Unavailable", statusCode = StatusCodes.Status404NotFound }
+                    });
+                }
+                return Ok(new
+                {
+
+                    list = EmployeeId,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Employee Detail.", statusCode = StatusCodes.Status200OK }
+                }); 
             }
-            return Ok(EmployeeId);
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
         }
+        #endregion
 
-
-
+        #region Listing Employee by Department which was access by all
         [HttpGet]
         [Route("GetEmployeeByDepartment")]
         [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> GetEmployeeByDepartment(int Id)
         {
-            var EmpById = repository.EmployeeByDepartment(Id).ToList();
+            try
+            {
+                var EmpById = repository.EmployeeByDepartment(Id).ToList();
+                if (EmpById.Count > 0)
+                {
+                    return Ok(new
+                    {
+                        list = EmpById,
+                        ResponseStatus = new ResponseStatus { status = "Success", message = "Employee List.", statusCode = StatusCodes.Status200OK }
+                    });
+                }
+                return NotFound(new
+                {
+                    ResponseStatus = new ResponseStatus { status = "Error", message = "Employee not found.", statusCode = StatusCodes.Status404NotFound }
 
-            return Ok(EmpById);
+                });
+               
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
         }
+        #endregion
 
+        #region Listing Department which was access by all
         [HttpGet]
         [Route("DepartmentModule")]
         [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> DepartmentModule()
         {
-            var departmentlist = repository.DepartmentModule().ToList();
-
-            return Ok(departmentlist);
+            try
+            {
+                var departmentlist = repository.DepartmentModule().ToList();
+                return Ok(new
+                {
+                    list = departmentlist,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Department List.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
         }
+        #endregion
 
-        [HttpGet]
-        [Route("SkillsModule")]
-        [Authorize(Roles = "Admin,User")]
-        public async Task<IActionResult> SkillsModule()
-        {
-            var skillList = repository.SkilsList().ToList();
-            return Ok(skillList);
-        }
-
-
-        [HttpGet]
-        [Route("SkillbyDepartmentID")]
-        [Authorize(Roles = "Admin,User")]
-        public async Task<IActionResult> SkillbyDepartmentID(int id)
-        {
-            var skillbydeptid = repository.SkillbyDepartmentID(id).ToList();
-            return Ok(skillbydeptid);
-        }
-
-
+        #region Listing Designation which was access by all
         [HttpGet]
         [Route("DesignationModule")]
         [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> DesignationModule()
         {
-            var desig = repository.DesignationModule().ToList();
-            return Ok(desig);
-        }
+            try
+            {
+                var desig = repository.DesignationModule().ToList();
+                return Ok(new
+                {
 
-        [HttpGet]
-        [Route("GetEmployeeSkillsById")]
-        [Authorize(Roles = "Admin,User")]
-        public async Task<IActionResult> GetEmployeeSkillsById(int EmployeeId)
-        {
-            var Employee = repository.GetEmployeeSkillsById(EmployeeId).ToList();
-            return Ok(Employee);
-        }
+                    list = desig,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Designation List.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
 
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Deleting Employee which wass access only by Admin
         [HttpDelete]
         [Route("DeleteEmployee")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteEmployee(int EmployeeId)
+        public async Task<IActionResult> DeleteEmployee(string EmployeeIdentity)
         {
-            var a = repository.DeleteEmployee(EmployeeId);
-
-            switch (a)
+            try
             {
-                case "Deleted":
-                    repository.Save();
-                    return StatusCode(StatusCodes.Status200OK,
-                        new ResponseStatus { status = "Success", message = "Employee Details Deleted SuccessFully" });
-                case "Error":
-                    return StatusCode(StatusCodes.Status404NotFound,
-                           new ResponseStatus { status = "Error", message = "Employee not found" });
+                var a = repository.DeleteEmployee(EmployeeIdentity);
 
+                switch (a)
+                {
+                    case "Deleted":
+                        repository.Save();
+                        return StatusCode(StatusCodes.Status200OK,
+                            new ResponseStatus { status = "Success", message = "Employee Details Deleted SuccessFully" ,statusCode= StatusCodes.Status200OK });
+                    case "Error":
+                        return StatusCode(StatusCodes.Status404NotFound,
+                               new ResponseStatus { status = "Error", message = "Employee not found", statusCode= StatusCodes.Status404NotFound });
+
+                }
+                return StatusCode(StatusCodes.Status404NotFound,
+                              new ResponseStatus { status = "Error", message = "Something Error",statusCode= StatusCodes.Status404NotFound });
             }
-            return StatusCode(StatusCodes.Status404NotFound,
-                          new ResponseStatus { status = "Error", message = "Something Error" });
-        }
-
-
-        [HttpDelete]
-        [Route("DeleteSkillbyEmp")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteSkillbyEmp(int EmpployeeId, int SkillId)
-        {
-            var a = repository.DeleteSkillbyEmp(EmpployeeId, SkillId);
-            switch (a)
+            catch (Exception ex)
             {
-                case "Employee Skill Removed":
-                    repository.Save();
-                    return StatusCode(StatusCodes.Status200OK,
-                       new ResponseStatus { status = "Success", message = "Employee Skill Deleted SuccessFully" });
 
-                case "Error":
-                    return StatusCode(StatusCodes.Status404NotFound,
-                          new ResponseStatus { status = "Error", message = "Employee Skill not found" });
-
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
             }
-
-            return StatusCode(StatusCodes.Status404NotFound,
-                        new ResponseStatus { status = "Error", message = "Something Error" });
         }
+        #endregion
 
+        #region FindRequiredEmployee which was access only by Admin
         [HttpGet]
         [Route("FindRequiredEmployee")]
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> FindRequiredEmployee([FromQuery] FindEmployee find)
         {
-            var emplist = repository.FindRequiredEmployee(find);
+            try
+            {
+                var emplist = repository.FindRequiredEmployee(find);
+                return Ok(new
+                {
 
-            return Ok(emplist);
+                    list = emplist,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Employee List.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
         }
+        #endregion
 
-        //[HttpGet]
-        //[Route("LevelupManager")]
-        ////[Authorize(Roles = "Admin")]
-        //public async Task<IActionResult> ApproveEmail([FromQuery] bool IsReject,int EmployeeId, int SkillId)
+
+
+        #region Adding Designation which was access only by Admin
+        //[HttpPost]
+        //[Route("AddDesignation")]
+        //[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> AddDesignation(DesignationVM designation)
         //{
-            
+        //    try
+        //    {
+        //        if (ModelState.IsValid)
+        //        {
+        //            repository.AddDesignation(designation);
+        //            repository.Save();
+        //            return StatusCode(StatusCodes.Status201Created,
+        //              new ResponseStatus { status = "Success", message = "Designation Added Successfully" , statusCode = StatusCodes.Status201Created });
+        //        }
+        //        return StatusCode(StatusCodes.Status400BadRequest,
+        //         new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest });
+        //    }
+        //    catch (Exception ex)
+        //    {
 
-        //    return Ok();
+        //        ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+        //        return BadRequest(new FailureResponse<object>
+        //        {
+        //            Error = ex.Message,
+        //            IsreponseSuccess = false
+        //        });
+        //    }
         //}
+        #endregion
+        #region Adding skillWeightage which was access only by Admin
+        //[HttpPost]
+        //[Route("AddSkillWeightage")]
+        //[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> AddSkillWeightage(WeightageVM weightage)
+        //{
+        //    try
+        //    {
+        //        if (ModelState.IsValid)
+        //        {
+        //            repository.AddSkillWeightage(weightage);
+        //            repository.Save();
+        //            return StatusCode(StatusCodes.Status201Created,
+        //                 new ResponseStatus { status = "Success", message = "Weightage Added Successfully." ,statusCode= StatusCodes.Status201Created });
+        //        }
+        //        return StatusCode(StatusCodes.Status400BadRequest,
+        //                new ResponseStatus { status = "Error", message = "Invalid Data." , statusCode= StatusCodes.Status400BadRequest });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+        //        return BadRequest(new FailureResponse<object>
+        //        {
+        //            Error = ex.Message,
+        //            IsreponseSuccess = false
+        //        });
+        //    }
+        //}
+        #endregion
+        #region Updating Level For Employee which was access only Admin
+        //[HttpPut]
+        //[Route("UpdateLevelForEmployee")]
+        //[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> UpdateLevelForEmployee(UserLevelVM level)
+        //{
+        //    try
+        //    {
+        //        if (ModelState.IsValid)
+        //        {
+        //            var a = repository.UpdateLevelForEmployee(level);
+
+        //            switch (a)
+        //            {
+        //                case "Updated":
+        //                    repository.Save();
+        //                    return StatusCode(StatusCodes.Status201Created,
+        //                  new ResponseStatus { status = "Success", message = "Level Updated Successfully.", statusCode= StatusCodes.Status201Created });
+
+        //                case "Error":
+        //                    return StatusCode(StatusCodes.Status404NotFound,
+        //                       new ResponseStatus { status = "Error", message = "Level not updated" , statusCode= StatusCodes.Status404NotFound });
+        //                case "User Not Exist":
+        //                    return StatusCode(StatusCodes.Status404NotFound,
+        //                       new ResponseStatus { status = "Error", message = "User Not Exist" , statusCode = StatusCodes.Status404NotFound });
+        //            }
+        //        }
+        //        return StatusCode(StatusCodes.Status400BadRequest,
+        //           new ResponseStatus { status = "Error", message = "Invalid Datas" , statusCode = StatusCodes.Status400BadRequest });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+        //        return BadRequest(new FailureResponse<object>
+        //        {
+        //            Error = ex.Message,
+        //            IsreponseSuccess = false
+        //        });
+        //    }
+        //}
+        #endregion
+        #region UpdateSkillWeightage which was access only by Admin
+        //[HttpPut]
+        //[Route("UpdateSkillWeightage")]
+        //[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> UpdateSkillWeightage(WeightageVM weightage)
+        //{
+        //    try
+        //    {
+        //        if (ModelState.IsValid)
+        //        {
+        //            var a = repository.UpdateSkillWeightage(weightage);
+        //            switch (a)
+        //            {
+        //                case "Updated":
+        //                    repository.Save();
+        //                    return StatusCode(StatusCodes.Status201Created,
+        //                        new ResponseStatus { status = "Success", message = "Weightage Updated SuccessFully",statusCode= StatusCodes.Status201Created });
+
+        //                case "Skill Not Exists":
+        //                    return StatusCode(StatusCodes.Status404NotFound,
+        //                        new ResponseStatus { status = "Error", message = "Skill Not Exists", statusCode= StatusCodes.Status404NotFound  });
+        //            }
+        //        }
+        //        return StatusCode(StatusCodes.Status400BadRequest,
+        //         new ResponseStatus { status = "Error", message = "Invalid Datas",statusCode = StatusCodes.Status400BadRequest });
+        //    }
+        //    catch (Exception ex)
+        //    {
+
+        //        ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+        //        return BadRequest(new FailureResponse<object>
+        //        {
+        //            Error = ex.Message,
+        //            IsreponseSuccess = false
+        //        });
+        //    }
+        //}
+        #endregion
+        #region Deleting Skill by Employee which was access only by Admin
+        //[HttpDelete]
+        //[Route("DeleteSkillbyEmp")]
+        //[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> DeleteSkillbyEmp(string EmployeeIdentity, int SkillId)
+        //{
+        //    try
+        //    {
+        //        var a = repository.DeleteSkillbyEmp(EmployeeIdentity, SkillId);
+        //        switch (a)
+        //        {
+        //            case "Employee Skill Removed":
+        //                repository.Save();
+        //                return StatusCode(StatusCodes.Status200OK,
+        //                   new ResponseStatus { status = "Success", message = "Employee Skill Deleted SuccessFully" , statusCode= StatusCodes.Status200OK });
+
+        //            case "Error":
+        //                return StatusCode(StatusCodes.Status404NotFound,
+        //                      new ResponseStatus { status = "Error", message = "Employee Skill not found" , statusCode = StatusCodes.Status404NotFound });
+
+        //        }
+
+        //        return StatusCode(StatusCodes.Status404NotFound,
+        //                    new ResponseStatus { status = "Error", message = "Something Error" , statusCode= StatusCodes.Status404NotFound });
+        //    }
+        //    catch (Exception ex)
+        //    {
+
+        //        ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+        //        return BadRequest(new FailureResponse<object>
+        //        {
+        //            Error = ex.Message,
+        //            IsreponseSuccess = false
+        //        });
+        //    }
+        //}
+        #endregion
     }
 }
 
