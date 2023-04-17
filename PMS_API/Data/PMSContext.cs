@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Org.BouncyCastle.Utilities.Collections;
 using PMS_API.Models;
 using PMS_API.ViewModels;
-
 namespace PMS_API.Data
 {
 
@@ -56,6 +55,7 @@ namespace PMS_API.Data
         public virtual DbSet<Weightage> Weightages { get; set; } = null!;
         public virtual DbSet<DelayedGoal> DelayedGoals { get; set; } = null!;
         public virtual DbSet<Developer> Developers { get; set; } = null!;
+        public virtual DbSet<Tester> Testers { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -645,6 +645,13 @@ namespace PMS_API.Data
                 entity.ToTable("Developer");
 
                 entity.Property(e => e.DeveloperId).HasColumnName("DeveloperID");
+            });
+
+            modelBuilder.Entity<Tester>(entity =>
+            {
+                entity.ToTable("Tester");
+
+                entity.Property(e => e.TesterId).HasColumnName("TesterID");
             });
 
             OnModelCreatingPartial(modelBuilder);

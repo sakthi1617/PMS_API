@@ -115,6 +115,7 @@ namespace PMS_API.Controllers
         }
         #endregion
 
+
         #region AddDesignations which was access only by Admin
         [HttpPost]
         [Route("AddDesignations")]
@@ -165,6 +166,30 @@ namespace PMS_API.Controllers
                 }
             }
            
+            return Ok();
+        }
+        #endregion
+
+        #region Adding Tester which was access only by Admin
+        [HttpPost]
+        [Route("AddTester")]
+        public async Task<IActionResult> AddTester(Tester tester)
+        {
+            if (ModelState.IsValid)
+            {
+                var a = repository.AddTester(tester);
+                if (a == "ok")
+                {
+                    return StatusCode(StatusCodes.Status201Created,
+                               new ResponseStatus { status = "Success", message = "Data Added Successfully", statusCode = StatusCodes.Status201Created });
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                           new ResponseStatus { status = "Error", message = "Please try again later", statusCode = StatusCodes.Status400BadRequest });
+                }
+            }
+
             return Ok();
         }
         #endregion
