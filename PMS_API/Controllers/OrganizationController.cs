@@ -115,6 +115,7 @@ namespace PMS_API.Controllers
         }
         #endregion
 
+
         #region AddDesignations which was access only by Admin
         [HttpPost]
         [Route("AddDesignations")]
@@ -169,6 +170,86 @@ namespace PMS_API.Controllers
         }
         #endregion
 
+        #region Adding Tester which was access only by Admin
+        [HttpPost]
+        [Route("AddTester")]
+        public async Task<IActionResult> AddTester(Tester tester)
+        {
+            if (ModelState.IsValid)
+            {
+                var a = repository.AddTester(tester);
+                if (a == "ok")
+                {
+                    return StatusCode(StatusCodes.Status201Created,
+                               new ResponseStatus { status = "Success", message = "Data Added Successfully", statusCode = StatusCodes.Status201Created });
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                           new ResponseStatus { status = "Error", message = "Please try again later", statusCode = StatusCodes.Status400BadRequest });
+                }
+            }
+
+            return Ok();
+        }
+        #endregion
+
+        #region Get all Developer
+        [HttpGet]
+        [Route("GetDevelpoer")]
+        public async Task<IActionResult> GetDevelpoer()
+        {
+            
+            try
+            {
+                var result = repository.GetDevelpoer();
+                return Ok(new
+                {
+
+                    list = result,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Developer List.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Get All Tester
+        [HttpGet]
+        [Route("GetTester")]
+        public async Task<IActionResult> GetTester()
+        {
+            
+
+            try
+            {
+                var result = repository.GetTester();
+                return Ok(new
+                {
+
+                    list = result,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Tester List.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
         #region Updating EMployee which wass access only by Admin
         [HttpPut]
         [Route("UpdateEmployee")]
