@@ -4,8 +4,9 @@
     {
         public int Id { get; set; }
         public int? DepartmentId { get; set; }
+        public int TeamId { get; set; } 
         public int? DesignationId { get; set; }
-        public int? SkillId { get; set; }
-        public int? Weightage1 { get; set; }
+        public List<int> SkillId { get; set; }
+       
     }
 }

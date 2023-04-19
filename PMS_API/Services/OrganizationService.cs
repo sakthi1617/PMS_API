@@ -25,7 +25,7 @@ namespace PMS_API.Services
             _context = context;
             _emailservice = emailService;
         }
-        public string? AddEmployee(EmployeeVM model)
+        public int? AddEmployee(EmployeeVM model)
         {
             EmployeeModule module = new EmployeeModule();
             ManagersTbl managersTbl = new ManagersTbl();
@@ -41,8 +41,9 @@ namespace PMS_API.Services
                 module.RoleId = model.RoleId;
                 module.DateOfJoining = model.DateOfJoining;
                 module.PriviousExperience = model.PriviousExperience;
-                module.FirstLevelReportingManager = model.FirstLevelReportingManager;
-                module.SecondLevelReportingManager = _context.ManagersTbls.First(c => c.ManagerId == model.FirstLevelReportingManager).Reporting1Person;
+               // module.FirstLevelReportingManager = model.FirstLevelReportingManager;
+                module.FirstLevelReportingManager = _context.EmployeeModules.FirstOrDefault( m => m.EmployeeIdentity == model.FirstLevelReportingManager).EmployeeId;
+                module.SecondLevelReportingManager = _context.EmployeeModules.FirstOrDefault(c => c.EmployeeIdentity == model.FirstLevelReportingManager).FirstLevelReportingManager;
                 module.DateOfBirth = model.DateOfBirth;
                 module.Age = model.Age;
                 module.Gender = model.Gender;
@@ -55,48 +56,51 @@ namespace PMS_API.Services
                 module.IsDeleted = false;
                 module.IsActivated = false;
                 module.Salary = model.Salary;
+                module.TeamId = model.TeamId;
 
-                _context.EmployeeModules.Add(module);
+               _context.EmployeeModules.Add(module);    
                 _context.SaveChanges();
-                if (module.DepartmentId == 102)
-                {
-                    managersTbl.EmployeeId = module.EmployeeId;
-                    managersTbl.ManagerName = module.Name;
-                    managersTbl.Email = module.Email;
-                    managersTbl.ContactNumber = module.WorkPhoneNumber;
-                    managersTbl.Reporting1Person = module.FirstLevelReportingManager;
-                    managersTbl.Reporting2Person = _context.ManagersTbls.First(s => s.ManagerId == model.FirstLevelReportingManager).Reporting1Person;
-                    managersTbl.IsDeleted = false;
-                    managersTbl.IsActivated = true;
-                    _context.ManagersTbls.Add(managersTbl);
-                    _context.SaveChanges();
-                }
 
-                 return module.EmployeeIdentity;
+                 return module.EmployeeId;
             }
             else
             {
-                return "Error";
+                return 0;
             }
-        }        
-        public string AddUserLevel(string employeeIdentity , EmployeeVM employee)
+        } 
+        public string AddUserLevel(int? employeeId, int? DepartmentId, int? DesignationId ,int? TeamId)
         {
-            if(employee.skills.Count > 0)
+            if(TeamId == null)
             {
-                foreach(var skill in employee.skills)
+                var weightage = _context.Weightages.Where(x => x.DepartmentId.Equals(DepartmentId) && x.DesignationId.Equals(DesignationId)).ToList();
+
+                foreach (var weight in weightage)
                 {
-                    var Id =_context.EmployeeModules.Where( x => x.EmployeeIdentity == employeeIdentity ).FirstOrDefault(); 
                     UserLevel module = new UserLevel();
-                    module.EmployeeId = Id.EmployeeId;
-                    module.SkillId = skill.SkillID;
+                    module.EmployeeId = employeeId;
+                    module.SkillId = weight.SkillId;
                     module.Level = 0;
-                    module.Weightage = 0;
+                    module.Weightage = weight.Weightage1;
                     _context.UserLevels.Add(module);
                     _context.SaveChanges();
                 }
                 return "Created";
             }
-            return "Noskill";
+
+            var weightages = _context.Weightages.Where(x => x.DepartmentId.Equals(DepartmentId) && x.DesignationId.Equals(DesignationId) && x.TeamId.Equals(TeamId)).ToList();
+
+            foreach (var weightage in weightages)
+            {
+                UserLevel module = new UserLevel();
+                module.EmployeeId = employeeId;
+                module.SkillId = weightage.SkillId;
+                module.Level = 0;
+                module.Weightage = weightage.Weightage1;
+                _context.UserLevels.Add(module);
+                _context.SaveChanges();
+            }
+            return "Created";
+
         }    
         public void AddDepartment(DepartmentVM model)
         {
@@ -113,6 +117,33 @@ namespace PMS_API.Services
             designation1.AddTime = DateTime.Now;
             _context.Designations1.Add(designation1);
         }
+
+        public void AddTeam(TeamVM team)
+        {
+            Team _team = new Team();    
+            _team.DepartmentId= team.DepartmentId;  
+            _team.TeamName = team.TeamName;
+            _context.Teams.Add(_team);
+            _context.SaveChanges();
+           
+        }
+
+        public List<Teamlist> GetTeam(int DepartmentID)
+        {
+            List<Teamlist> teams = new List<Teamlist>();
+            var a =  _context.Teams.Where(x => x.DepartmentId == DepartmentID).ToList(); 
+         
+                foreach(var item in a)
+                {
+                    Teamlist list = new Teamlist();
+                    list.TeamId= item.DepartmentId;
+                    list.TeamName= item.TeamName;
+                    teams.Add(list);
+                }
+                return teams;
+            
+        }
+
         public string UpdateEmployee(string EmployeeIdentity, EmployeeVM model)
         {
             try
@@ -127,8 +158,9 @@ namespace PMS_API.Services
                     Emp.RoleId = model.RoleId;
                     Emp.DateOfJoining = model.DateOfJoining;
                     Emp.PriviousExperience = model.PriviousExperience;
-                    Emp.FirstLevelReportingManager = model.FirstLevelReportingManager;
-                    //Emp.SecondLevelReportingManager = model.SecondLevelReportingManager;
+                    //Emp.FirstLevelReportingManager = model.FirstLevelReportingManager;
+                    Emp.FirstLevelReportingManager = _context.EmployeeModules.First(m => m.EmployeeIdentity == model.FirstLevelReportingManager).EmployeeId;
+                    Emp.SecondLevelReportingManager = _context.EmployeeModules.First(c => c.EmployeeIdentity == model.FirstLevelReportingManager).FirstLevelReportingManager;
                     Emp.DateOfBirth = model.DateOfBirth;
                     Emp.Age = model.Age;
                     Emp.Gender = model.Gender;
@@ -204,34 +236,7 @@ namespace PMS_API.Services
                 throw ex;
             }
         }
-        public string AddDeveloper(Developer developer)
-        {
-            Developer dev = new Developer();    
 
-            dev.DeveloperName = developer.DeveloperName;    
-            _context.Developers.Add(developer); 
-            _context.SaveChanges();
-            return "ok";
-        }
-
-        public string AddTester(Tester tester)
-        {
-            Tester test = new Tester();
-
-            test.TesterName = tester.TesterName;
-            _context.Testers.Add(test);
-            _context.SaveChanges();
-            return "ok";
-        }
-
-        public List<Developer> GetDevelpoer()
-        {
-            return _context.Developers.ToList();
-        }
-        public List<Tester> GetTester()
-        {
-            return _context.Testers.ToList();
-        }
         
         public void EmailDelivery()
         {
@@ -306,10 +311,7 @@ namespace PMS_API.Services
                 _context.SaveChanges();
             }
         }
-        //public List<EmployeeModule> EmployeeList()
-        //{
-        //    return _context.EmployeeModules.Where(s => s.IsDeleted != true && s.IsActivated != false).ToList();
-        //}
+        
         public dynamic EmployeeList()
         {
             List<TestEmployeeList> testlist = new List<TestEmployeeList>();
@@ -323,9 +325,9 @@ namespace PMS_API.Services
                 var secondmanager = report1.Where(s => s.SecondLevelReportingManager == report.SecondLevelReportingManager).ToList();
                 // EmployeeVM employeeVM = new EmployeeVM();
                 test.FirstLevelReportingManager = report.FirstLevelReportingManager;
-                test.FirstLevelReportingManagerName = _context.ManagersTbls.First(w => w.ManagerId == report.FirstLevelReportingManager).ManagerName;
+                test.FirstLevelReportingManagerName = _context.EmployeeModules.First(w => w.EmployeeId == report.FirstLevelReportingManager).Name;
                 test.SecondLevelReportingManager = report.SecondLevelReportingManager;
-                test.SecondLevelReportingManagerName = _context.ManagersTbls.First(w => w.ManagerId == report.SecondLevelReportingManager).ManagerName;
+                test.SecondLevelReportingManagerName = _context.EmployeeModules.First(w => w.EmployeeId == report.SecondLevelReportingManager).Name;
                 testemp = new TestEmployeeVM();
                 testemp.EmployeeId = report.EmployeeId;
                 testemp.Name = report.Name;
@@ -359,9 +361,9 @@ namespace PMS_API.Services
                 manager.EmployeeId = emp.EmployeeId;
                 manager.EmployeeName = emp.Name;
                 manager.secondLevelManagerId = emp.SecondLevelReportingManager;
-                manager.SecondLevelManagerName = _context.ManagersTbls.First(s => s.ManagerId == emp.SecondLevelReportingManager).ManagerName;
+                manager.SecondLevelManagerName = _context.EmployeeModules.First(s => s.EmployeeId == emp.SecondLevelReportingManager).Name;
                 manager.FirstLevelManagerId = emp.FirstLevelReportingManager;
-                manager.FirstLevelManagerName = _context.ManagersTbls.First(s => s.ManagerId == emp.FirstLevelReportingManager).ManagerName;
+                manager.FirstLevelManagerName = _context.EmployeeModules.First(s => s.EmployeeId == emp.FirstLevelReportingManager).Name;
 
             }
             return manager;
@@ -417,7 +419,24 @@ namespace PMS_API.Services
                 skills.AddRange(skill);
             }
             return skills.ToList();
-        }          
+        }
+
+        public List<ReportingPerson> GetReportingPerson()
+        {
+            List<ReportingPerson> testlist = new List<ReportingPerson>();
+            TestEmployeeVM testemp = new TestEmployeeVM();
+            List<TestEmployeeVM> testemplist = new List<TestEmployeeVM>();
+
+            var employee = _context.EmployeeModules.ToList();
+            foreach (var report in employee)
+            {
+                ReportingPerson reportingPerson = new ReportingPerson();
+                reportingPerson.ReportingPersonId = report.EmployeeIdentity;
+                reportingPerson.ReportingPersonName = report.Name;
+                testlist.Add(reportingPerson);
+            }
+            return testlist.ToList();
+        }
         public void Save()
         {
             _context.SaveChanges();

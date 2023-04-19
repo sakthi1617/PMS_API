@@ -198,7 +198,7 @@ namespace PMS_API.Services
                 //}
 
                 var data = _context.EmployeeModules.Where(x => x.EmployeeId == Id.EmployeeId).FirstOrDefault();
-                var mandata = _context.ManagersTbls.Where( x=> x.ManagerId == gole.AssingedManagerId).FirstOrDefault(); 
+                var mandata = _context.EmployeeModules.Where( x=> x.EmployeeId == gole.AssingedManagerId).FirstOrDefault(); 
                
                 var msg = " Hi " + gole.Assignedby + " " + data.Name + " has Submitted her Goal Review at " + review.CreatedOn + " So Kindly check this before Appraisal Time Period";
                 var message = new Message(new string[] { mandata.Email }, "Notification of goal review submission", msg.ToString(), null);
@@ -295,6 +295,7 @@ namespace PMS_API.Services
         {
             var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity).FirstOrDefault();
             var goal = _context.GoalModules.Where(x => x.EmployeeId == Id.EmployeeId && x.GoalId == GoalID && x.IsDeleted != true).FirstOrDefault();
+
            
             if (goal != null)
             {
@@ -310,10 +311,11 @@ namespace PMS_API.Services
                                emp,
                                man
                            };
-                var Empl = join.FirstOrDefault();
 
-                var msg = " Hi " + Empl.man.ManagerName + " " + " Please Extend my Review Time " +""+ "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
-                var message = new Message(new string[] { Empl.man.Email }, "Notification of Review Extention Permission", msg.ToString(), null);
+                var Empl = _context.EmployeeModules.Where(x => x.EmployeeId == Id.FirstLevelReportingManager).FirstOrDefault();
+
+                var msg = " Hi " + Empl.Name + " " + " Please Extend my Review Time " +""+ "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
+                var message = new Message(new string[] { Empl.Email }, "Notification of Review Extention Permission", msg.ToString(), null);
 
                 var a = emailService.SendEmail(message);
                 if(a == "ok")
@@ -333,7 +335,8 @@ namespace PMS_API.Services
         {
             var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity).FirstOrDefault();
             var EmpDetail = _context.EmployeeModules.Where(x => x.EmployeeId == Id.EmployeeId).FirstOrDefault();
-            var manager = _context.ManagersTbls.Where(x=>x.ManagerId == EmpDetail.FirstLevelReportingManager).FirstOrDefault();
+            //var manager = _context.ManagersTbls.Where(x=>x.ManagerId == EmpDetail.FirstLevelReportingManager).FirstOrDefault();
+            var manager = _context.EmployeeModules.Where(x=>x.EmployeeId == Id.FirstLevelReportingManager).FirstOrDefault();
             var Empid = _context.ManagersTbls.Where(x => x.EmployeeId == Id.EmployeeId).FirstOrDefault();
             var goid = _context.GoalModules.Where(x => x.GoalId == GoalID && x.AssingedManagerId == Empid.ManagerId).FirstOrDefault();
 
@@ -344,8 +347,7 @@ namespace PMS_API.Services
                     return "Already Requested";
                 }
                 
-              
-                var msg = " Hi " + manager.ManagerName + " " + " Please Extend my Review Time " + "" + "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
+                var msg = " Hi " + manager.Name + " " + " Please Extend my Review Time " + "" + "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
                 var message = new Message(new string[] { manager.Email }, "Notification of Review Extention Permission", msg.ToString(), null);
                 
 
@@ -396,12 +398,17 @@ namespace PMS_API.Services
                 
             }
             return "Error";
-        }      
+        }      /// <summary>
+        /// ---------------------------------------------------------------------------------------------------------------
+        /// </summary>
+        /// <param name="approved"></param>
+        /// <param name="GoalId"></param>
+        /// <returns></returns>
         public string ManagerExtReqApprove(bool approved, int GoalId)
         {
             var goaldetail = _context.GoalModules.Where(x => x.IsManagerExtentionRequested == true && x.GoalId == GoalId).FirstOrDefault();
             var empmail= _context.EmployeeModules.Where(x => x.EmployeeId == goaldetail.EmployeeId).FirstOrDefault();
-            var managermail = _context.ManagersTbls.Where(x => x.ManagerId == empmail.FirstLevelReportingManager).FirstOrDefault();
+            var managermail = _context.EmployeeModules.Where(x => x.EmployeeId == empmail.FirstLevelReportingManager).FirstOrDefault();
             if (goaldetail != null)
             {
                 if(approved == true)
@@ -409,7 +416,7 @@ namespace PMS_API.Services
                     goaldetail.IsManagerExtentionApproved = true;
                     goaldetail.IsManagerExtentionApprovedAt = DateTime.Now;
                     _context.GoalModules.Update(goaldetail);
-                    var msg = " Hi " + managermail.ManagerName + " " + " Your Review Extension Time is Approved For next 24Hours So Kindly Colmpelte Your Goal Reviews within That Time Duration " + "" ;
+                    var msg = " Hi " + managermail.Name + " " + " Your Review Extension Time is Approved For next 24Hours So Kindly Colmpelte Your Goal Reviews within That Time Duration " + "" ;
                     var message = new Message(new string[] {managermail.Email}, "Notification of Review Extention Permission", msg.ToString(), null);
 
                     var a = emailService.SendEmail(message);

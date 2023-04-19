@@ -5,6 +5,7 @@ namespace PMS_API.Repository
 {
     public interface ISkillRepo
     {
+        public void AddSkillWeightage(WeightageVM weightage);
         public string AddAdditionalSkills(UserLevelVM level);
         public IQueryable<GetEmployeeSkillsByIdVM> GetEmployeeSkillsById(string EmployeeIdentity);
         public void AddSkill(SkillsVM model);

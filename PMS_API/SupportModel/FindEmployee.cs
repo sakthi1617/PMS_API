@@ -6,8 +6,8 @@ namespace PMS_API.SupportModel
     public class FindEmployee
     {
         public int? Level { get; set; }
-        public int? MinimumExperience { get; set; }
-        public int? MaximumExperience { get; set; }
+        public decimal? MinimumExperience { get; set; }
+        public decimal? MaximumExperience { get; set; }
         public List<int> Skillid { get; set; }
 
     }

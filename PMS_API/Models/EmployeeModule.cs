@@ -25,11 +25,12 @@ namespace PMS_API.Models
         public string? Email { get; set; }
         public int? DepartmentId { get; set; }
         public int? DesignationId { get; set; }
+        public int? TeamId { get; set; }
         public int? RoleId { get; set; }
         public DateTime? DateOfJoining { get; set; }
-        public int? PriviousExperience { get; set; }
-        public int? CurrentExperience { get; set; }
-        public int? TotalExperience { get; set; }
+        public decimal? PriviousExperience { get; set; }
+        public decimal? CurrentExperience { get; set; }
+        public decimal? TotalExperience { get; set; }
         public int? FirstLevelReportingManager { get; set; }
         public int? SecondLevelReportingManager { get; set; }
         public DateTime? DateOfBirth { get; set; }
@@ -56,6 +57,7 @@ namespace PMS_API.Models
         public virtual Designation1? DesignationNavigation { get; set; }
         public virtual ManagersTbl? FirstLevelReportingManagerNavigation { get; set; }
         public virtual Role? Role { get; set; }
+        public virtual Team? Team { get; set; }
         public virtual ManagersTbl? SecondLevelReportingManagerNavigation { get; set; }
         public virtual ICollection<DelayedGoal> DelayedGoals { get; set; }
         public virtual ICollection<EmployeeGoalReview> EmployeeGoalReviews { get; set; }
