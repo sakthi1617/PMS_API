@@ -21,6 +21,35 @@ namespace PMS_API.Controllers
             _emailservice = emailservice;
         }
 
+        #region Adding skillWeightage which was access only by Admin
+        [HttpPost]
+        [Route("AddSkillWeightage")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AddSkillWeightage(WeightageVM weightage)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    repository.AddSkillWeightage(weightage);
+                    return StatusCode(StatusCodes.Status201Created,
+                         new ResponseStatus { status = "Success", message = "Weightage Added Successfully.", statusCode = StatusCodes.Status201Created });
+                }
+                return StatusCode(StatusCodes.Status400BadRequest,
+                        new ResponseStatus { status = "Error", message = "Invalid Data.", statusCode = StatusCodes.Status400BadRequest });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
         #region Adding Additional skills which was access only by Admin
         [HttpPost]
         [Route("AddAdditionalSkills")]

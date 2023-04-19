@@ -23,10 +23,12 @@ namespace PMS_API.Controllers
     {
         private readonly IOrganizationRepo repository;
         private readonly IEmailService _emailservice;
-        public OrganizationController(IOrganizationRepo _repository, IEmailService emailservice)
+        private readonly PMSContext _context;
+        public OrganizationController(IOrganizationRepo _repository, IEmailService emailservice, PMSContext context)
         {
             repository = _repository;
             _emailservice = emailservice;
+            _context = context;
         }
 
         #region Adding Employee which was access only by Admin
@@ -41,14 +43,14 @@ namespace PMS_API.Controllers
                 {
                     var employeeCreationResult = repository.AddEmployee(employeeModule);
 
-                    if (employeeCreationResult != "Error" && employeeCreationResult != null)
+                    if (employeeCreationResult != 0 && employeeCreationResult != null)
                     {
 
-                        var userLevelResult = repository.AddUserLevel(employeeCreationResult,employeeModule);
+                        var userLevelResult = repository.AddUserLevel(employeeCreationResult,employeeModule.DepartmentId,employeeModule.DesignationId,employeeModule.TeamId);
                         if (userLevelResult == "Created")
                         {
                             //var files = Request.Form.Files.Any() ? Request.Form.Files : new FormFileCollection();
-                            var msg = " Hi " + employeeModule.Name + "" + "your Account created Succesfully To set your password, please click the following link: https://localhost:7099/api/OrganizationAuth/ResetPassword?Email= " + employeeModule.Email;
+                            var msg = " Hi " + employeeModule.Name + "" + "your Account created Succesfully To set your password, please click the following link: http://192.168.7.43:8888/api/OrganizationAuth/GeneratetPassword?Email="+employeeModule.Email;
                             var message = new Message(new string[] { employeeModule.Email }, "Welcome To PMS", msg.ToString(), null);
                             _emailservice.SendEmail(message);
 
@@ -146,72 +148,25 @@ namespace PMS_API.Controllers
         }
         #endregion
 
-        #region Adding Developer which was access only by Admin
+        #region Add Team
         [HttpPost]
-        [Route("AddDeveloper")]         
-        public async Task<IActionResult> AddDeveloper(Developer developer)
+        [Route("AddTeam")]
+        public async Task<IActionResult> AddTeam(TeamVM team)
         {
-            if(ModelState.IsValid) 
-            {
-                var a = repository.AddDeveloper(developer);
-                if (a == "ok")
-                {
-                    return StatusCode(StatusCodes.Status201Created,
-                               new ResponseStatus { status = "Success", message = "Data Added Successfully", statusCode = StatusCodes.Status201Created });
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status400BadRequest,
-                           new ResponseStatus { status = "Error", message = "Please try again later", statusCode = StatusCodes.Status400BadRequest});
-                }
-            }
-           
-            return Ok();
-        }
-        #endregion
-
-        #region Adding Tester which was access only by Admin
-        [HttpPost]
-        [Route("AddTester")]
-        public async Task<IActionResult> AddTester(Tester tester)
-        {
-            if (ModelState.IsValid)
-            {
-                var a = repository.AddTester(tester);
-                if (a == "ok")
-                {
-                    return StatusCode(StatusCodes.Status201Created,
-                               new ResponseStatus { status = "Success", message = "Data Added Successfully", statusCode = StatusCodes.Status201Created });
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status400BadRequest,
-                           new ResponseStatus { status = "Error", message = "Please try again later", statusCode = StatusCodes.Status400BadRequest });
-                }
-            }
-
-            return Ok();
-        }
-        #endregion
-
-        #region Get all Developer
-        [HttpGet]
-        [Route("GetDevelpoer")]
-        public async Task<IActionResult> GetDevelpoer()
-        {
-            
             try
             {
-                var result = repository.GetDevelpoer();
-                return Ok(new
+                if (ModelState.IsValid)
                 {
-
-                    list = result,
-                    ResponseStatus = new ResponseStatus { status = "Success", message = "Developer List.", statusCode = StatusCodes.Status200OK }
-                });
+                    repository.AddTeam(team);
+                    return StatusCode(StatusCodes.Status201Created,
+                      new ResponseStatus { status = "Success", message = "Team Added Successfully", statusCode = StatusCodes.Status201Created });
+                }
+                return StatusCode(StatusCodes.Status400BadRequest,
+                 new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
             }
             catch (Exception ex)
             {
+
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -222,25 +177,24 @@ namespace PMS_API.Controllers
         }
         #endregion
 
-        #region Get All Tester
+        #region Get Team
         [HttpGet]
-        [Route("GetTester")]
-        public async Task<IActionResult> GetTester()
+        [Route("GetTeam")]
+        public async Task<IActionResult> GetTeam (int DepartmentID)
         {
-            
-
             try
             {
-                var result = repository.GetTester();
+                var a = repository.GetTeam(DepartmentID);
                 return Ok(new
                 {
 
-                    list = result,
-                    ResponseStatus = new ResponseStatus { status = "Success", message = "Tester List.", statusCode = StatusCodes.Status200OK }
+                    list = a,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Skill List.", statusCode = StatusCodes.Status200OK }
                 });
             }
             catch (Exception ex)
             {
+
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
@@ -248,8 +202,10 @@ namespace PMS_API.Controllers
                     IsreponseSuccess = false
                 });
             }
+
         }
         #endregion
+
         #region Updating EMployee which wass access only by Admin
         [HttpPut]
         [Route("UpdateEmployee")]
@@ -440,14 +396,27 @@ namespace PMS_API.Controllers
         [Route("EmployeeHierachy")]
         public async Task<IActionResult> EmployeeHierachy(int employeeId)
         {
-            var result = repository.EmployeeHierachy(employeeId);
-            return Ok(new SuccessResponse<object>
+            try
             {
-                ModelData = new
+                var result = repository.EmployeeHierachy(employeeId);
+                return Ok(new SuccessResponse<object>
                 {
-                    Managers = result
-                }
-            });
+                    ModelData = new
+                    {
+                        Managers = result
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
 
         }
 
@@ -486,7 +455,7 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
-
+       
         #region Listing Employee by Department which was access by all
         [HttpGet]
         [Route("GetEmployeeByDepartment")]
@@ -820,6 +789,32 @@ namespace PMS_API.Controllers
         //        });
         //    }
         //}
+        #endregion
+        #region Get Reporting person
+        [HttpGet]
+        [Route("GetReportingPerson")]
+        public async Task<IActionResult> GetReportingPerson()
+        {
+            try
+            {
+                var result = repository.GetReportingPerson();
+                return Ok(new
+                {
+
+                    list = result,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Reporting Person List", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
         #endregion
     }
 }

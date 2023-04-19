@@ -54,8 +54,7 @@ namespace PMS_API.Data
         public virtual DbSet<UserLevel> UserLevels { get; set; } = null!;
         public virtual DbSet<Weightage> Weightages { get; set; } = null!;
         public virtual DbSet<DelayedGoal> DelayedGoals { get; set; } = null!;
-        public virtual DbSet<Developer> Developers { get; set; } = null!;
-        public virtual DbSet<Tester> Testers { get; set; } = null!;
+        public virtual DbSet<Team> Teams { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -189,6 +188,9 @@ namespace PMS_API.Data
                 entity.ToTable("EmployeeModule");
 
                 entity.Property(e => e.AddTime).HasColumnType("datetime");
+                entity.Property(e => e.TotalExperience).HasColumnType("decimal(18, 2)");
+                entity.Property(e => e.CurrentExperience).HasColumnType("decimal(18, 2)");
+                entity.Property(e => e.PriviousExperience).HasColumnType("decimal(18, 2)");
 
                 entity.Property(e => e.DateOfBirth).HasColumnType("date");
 
@@ -613,7 +615,14 @@ namespace PMS_API.Data
                     .WithMany(p => p.Weightages)
                     .HasForeignKey(d => d.SkillId)
                     .HasConstraintName("FK__Weightage__Skill__46E78A0C");
-            });
+
+                entity.HasOne(d => d.Team)
+                    .WithMany(p => p.Weightages)
+                    .HasForeignKey(d => d.TeamId)
+                    .HasConstraintName("FK__Weightage__TeamI__690797E6");
+           
+
+        });
 
             modelBuilder.Entity<DelayedGoal>(entity =>
             {
@@ -640,18 +649,14 @@ namespace PMS_API.Data
                     .HasConstraintName("FK__Delayed_G__Emplo__55F4C372");
             });
 
-            modelBuilder.Entity<Developer>(entity =>
+            modelBuilder.Entity<Team>(entity =>
             {
-                entity.ToTable("Developer");
+                entity.ToTable("Team");
 
-                entity.Property(e => e.DeveloperId).HasColumnName("DeveloperID");
-            });
-
-            modelBuilder.Entity<Tester>(entity =>
-            {
-                entity.ToTable("Tester");
-
-                entity.Property(e => e.TesterId).HasColumnName("TesterID");
+                entity.HasOne(d => d.Department)
+                    .WithMany(p => p.Teams)
+                    .HasForeignKey(d => d.DepartmentId)
+                    .HasConstraintName("FK__Team__Department__662B2B3B");
             });
 
             OnModelCreatingPartial(modelBuilder);
