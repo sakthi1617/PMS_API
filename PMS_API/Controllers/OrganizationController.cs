@@ -340,7 +340,9 @@ namespace PMS_API.Controllers
         {
             try
             {
+
                 if (ModelState.IsValid)
+
                 {
                     string a = repository.UpdateDesignation(id, designation);
 
