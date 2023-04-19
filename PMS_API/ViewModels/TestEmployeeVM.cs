@@ -11,7 +11,7 @@
         public string DesignationName { get; set; }
         public int? RoleId { get; set; }
         public DateTime? DateOfJoining { get; set; }
-        public int? PriviousExperience { get; set; }
+        public Decimal? PriviousExperience { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public int? Age { get; set; }
         public string? Gender { get; set; }

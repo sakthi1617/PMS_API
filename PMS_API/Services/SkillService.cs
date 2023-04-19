@@ -15,6 +15,25 @@ namespace PMS_API.Services
             _context = context;
             _emailservice = emailService;
         }
+        public void AddSkillWeightage(WeightageVM weightage)
+        {
+            if(weightage.SkillId.Count >0)
+            {
+                foreach( var skill in weightage.SkillId )
+                {
+                    Weightage weightage1 = new Weightage();
+                    weightage1.DepartmentId = weightage.DepartmentId;
+                    weightage1.DesignationId = weightage.DesignationId;
+                    weightage1.TeamId= weightage.TeamId;
+                    weightage1.SkillId = skill;
+                    weightage1.Weightage1 = 0;
+                    _context.Weightages.Add(weightage1);
+                    _context.SaveChanges();
+                }
+                
+            }
+           
+        }
         public string AddAdditionalSkills(UserLevelVM level)
         {
             var users = _context.EmployeeModules.Where(x => x.EmployeeIdentity == level.EmployeeIdentity && x.IsDeleted != true).FirstOrDefault();
@@ -128,27 +147,29 @@ namespace PMS_API.Services
 
             if (Id != null)
             {
-                var data = from emp in _context.EmployeeModules
-                           join man in _context.ManagersTbls
-                           on emp.FirstLevelReportingManager equals man.ManagerId
-                           where emp.EmployeeId == Id.EmployeeId && emp.IsDeleted != true //------------------
-                           select new { emp, man };
+                //var data = from emp in _context.EmployeeModules
+                //           join man in _context.ManagersTbls
+                //           on emp.FirstLevelReportingManager equals man.ManagerId
+                //           where emp.EmployeeId == Id.EmployeeId && emp.IsDeleted != true //------------------
+                //           select new { emp, man };
 
-                var Data = from emp in _context.EmployeeModules
-                           join man in _context.ManagersTbls
-                           on emp.SecondLevelReportingManager equals man.ManagerId
-                           where emp.EmployeeId == Id.EmployeeId && emp.IsDeleted != true  //---------------------
-                           select new { emp, man };
+                var first = _context.EmployeeModules.Where(x => x.EmployeeId == Id.FirstLevelReportingManager && x.IsDeleted != true).FirstOrDefault();
+                var second = _context.EmployeeModules.Where(x => x.EmployeeId == Id.SecondLevelReportingManager && x.IsDeleted != true).FirstOrDefault();
+                //var Data = from emp in _context.EmployeeModules
+                //           join man in _context.ManagersTbls
+                //           on emp.SecondLevelReportingManager equals man.ManagerId
+                //           where emp.EmployeeId == Id.EmployeeId && emp.IsDeleted != true  //---------------------
+                //           select new { emp, man };
 
-                var first = data.FirstOrDefault();
-                var second = Data.FirstOrDefault();
+                //var first = data.FirstOrDefault();
+                //var second = Data.FirstOrDefault();
 
 
                 RequestForApproved request = new RequestForApproved();
 
                 request.EmployeeId = Id.EmployeeId;
-                request.RequestCreatedById = first.man.ManagerId;
-                request.RequestCreatedBy = first.man.ManagerName;
+                request.RequestCreatedById = first.EmployeeId;
+                request.RequestCreatedBy = first.Name;
                 request.RequestCreatedAt = DateTime.Now;
                 request.Reason = rea;
                 request.Comments = descrip;
@@ -159,8 +180,8 @@ namespace PMS_API.Services
                 _context.RequestForApproveds.Add(request);
                 _context.SaveChanges();
 
-                var msg = "(Req_ID " + request.ReqId + ".)" + " " + "</br>" + "Hi " + second.man.ManagerName + " I Would Like To Improve " + Id.Name + "'s SkillLevel to Next Level For " + "Reason:" + "</br>" + "<h3>" + rea + "Descriptions:" + "</br>" + "<h3>" + "  " + descrip + " Kindly Approve This" + "</br>" + "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
-                var message = new Message(new string[] { second.man.Email }, "Requst For Level Update", msg.ToString(), fiels);
+                var msg = "(Req_ID " + request.ReqId + ".)" + " " + "</br>" + "Hi " + second.Name + " I Would Like To Improve " + Id.Name + "'s SkillLevel to Next Level For " + "Reason:" + "</br>" + "<h3>" + rea + "Descriptions:" + "</br>" + "<h3>" + "  " + descrip + " Kindly Approve This" + "</br>" + "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
+                var message = new Message(new string[] { second.Email }, "Requst For Level Update", msg.ToString(), fiels);
                 var a = _emailservice.SendEmail(message);
 
                 if (a == "ok")
@@ -188,21 +209,23 @@ namespace PMS_API.Services
             var user = _context.RequestForApproveds.Where(x => x.ReqId == reqid && x.IsActivated == true).FirstOrDefault();
             if (user != null)
             {
-                var mail1 = from emp in _context.EmployeeModules
-                            join man in _context.ManagersTbls
-                            on emp.FirstLevelReportingManager equals man.ManagerId
-                            where emp.EmployeeId == user.EmployeeId
-                            select new { emp, man };
-
-                var mail2 = from emp in _context.EmployeeModules
-                            join man in _context.ManagersTbls
-                            on emp.SecondLevelReportingManager equals man.ManagerId
-                            where emp.EmployeeId == user.EmployeeId
-                            select new { emp, man };
+                //var mail1 = from emp in _context.EmployeeModules
+                //            join man in _context.ManagersTbls
+                //            on emp.FirstLevelReportingManager equals man.ManagerId
+                //            where emp.EmployeeId == user.EmployeeId
+                //            select new { emp, man };
+                var a = _context.EmployeeModules.Where(x => x.EmployeeId == user.EmployeeId).FirstOrDefault();
+                var first = _context.EmployeeModules.Where(x => x.EmployeeId == a.FirstLevelReportingManager).FirstOrDefault();
+                var second = _context.EmployeeModules.Where(x => x.EmployeeId == a.SecondLevelReportingManager).FirstOrDefault();
+                //var mail2 = from emp in _context.EmployeeModules
+                //            join man in _context.ManagersTbls
+                //            on emp.SecondLevelReportingManager equals man.ManagerId
+                //            where emp.EmployeeId == user.EmployeeId
+                //            select new { emp, man };
 
                 var skillname = _context.Skills.Where(x => x.SkillId == user.Skillid).FirstOrDefault();
-                var a = mail1.FirstOrDefault();
-                var b = mail2.FirstOrDefault();
+                //var a = mail1.FirstOrDefault();
+                //var b = mail2.FirstOrDefault();
 
                 if (a != null)
                 {
@@ -210,19 +233,19 @@ namespace PMS_API.Services
 
                     email.ReqId = reqid;
                     email.Status = status;
-                    email.FirstlvlManagerMail = a.man.Email;
-                    email.SecondlvlManagerMail = a.man.Email;
-                    email.Employeemail = a.emp.Email;
+                    email.FirstlvlManagerMail = first.Email;
+                    email.SecondlvlManagerMail =second.Email;
+                    email.Employeemail = a.Email;
                     email.IsDeliverd = false;
                     email.IsNotified = false;
                     email.IsUpdated = false;
                     email.IsActive = true;
                     email.Skillid = user.Skillid;
                     email.SkillName = skillname.SkillName;
-                    email.FirstLvlManagerName = a.man.ManagerName;
-                    email.SecondlvlManagerName = b.man.ManagerName;
+                    email.FirstLvlManagerName = first.Name;
+                    email.SecondlvlManagerName = second.Name;
                     email.EmployeeId = user.EmployeeId;
-                    email.Employeename = a.emp.Name;
+                    email.Employeename = a.Name;
                     _context.ResponseEmails.Add(email);
                     _context.SaveChanges();
 

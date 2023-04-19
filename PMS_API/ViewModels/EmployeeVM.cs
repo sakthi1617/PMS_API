@@ -9,12 +9,12 @@ namespace PMS_API.ViewModels
         public string? Name { get; set; }
         public string? Email { get; set; }
         public int? DepartmentId { get; set; }
+        public int TeamId { get; set; }
         public int? DesignationId { get; set; }
         public int? RoleId { get; set; }
         public DateTime? DateOfJoining { get; set; }
-        public int? PriviousExperience { get; set; }
-
-        public int? FirstLevelReportingManager { get; set; }
+        public decimal? PriviousExperience { get; set; }
+        public string FirstLevelReportingManager { get; set; }
        // public int? SecondLevelReportingManager { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public int? Age { get; set; }
@@ -26,7 +26,7 @@ namespace PMS_API.ViewModels
         public decimal? Salary { get; set; }
         public string? ProfilePicture { get; set; }
 
-      public  List<UserSkillsVM> skills { get;set; }
+     // public  List<UserSkillsVM> skills { get;set; }
 
     }
 }
