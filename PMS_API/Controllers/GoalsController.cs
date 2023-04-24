@@ -544,7 +544,7 @@ namespace PMS_API.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    repository.GoalRatingCalculation(EmployeeIdentity);
+                   // repository.GoalRatingCalculation(EmployeeIdentity);
                     return Ok();
                 }
                 return BadRequest();

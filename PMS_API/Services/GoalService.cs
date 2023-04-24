@@ -13,6 +13,7 @@ using PMS_API.SupportModel;
 using PMS_API.ViewModels;
 using PMS_API.Models;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Mvc;
 
 namespace PMS_API.Services
 {
@@ -104,6 +105,8 @@ namespace PMS_API.Services
         //}
         public List<GoalVM> GetGoalbyEmpId(string EmployeeIdentity)
         {
+             // GoalPerformanceRatingCalculation();
+            AnnualPerformanceRatingCalculation();
             var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity).FirstOrDefault();
             var a = (from emp in _context.EmployeeModules
                     join gol in _context.GoalModules
@@ -398,12 +401,7 @@ namespace PMS_API.Services
                 
             }
             return "Error";
-        }      /// <summary>
-        /// ---------------------------------------------------------------------------------------------------------------
-        /// </summary>
-        /// <param name="approved"></param>
-        /// <param name="GoalId"></param>
-        /// <returns></returns>
+        }     
         public string ManagerExtReqApprove(bool approved, int GoalId)
         {
             var goaldetail = _context.GoalModules.Where(x => x.IsManagerExtentionRequested == true && x.GoalId == GoalId).FirstOrDefault();
@@ -538,47 +536,139 @@ namespace PMS_API.Services
 
            
         }
-        public void GoalRatingCalculation(string EmployeeIdentity)
+
+
+
+
+      
+        public void GoalPerformanceRatingCalculation(int EmpId)
         {
-            var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity).FirstOrDefault();
-            var TotalGoals1 = _context.ManagerGoalReviews.Where( x => x.EmployeeId == Id.EmployeeId && x.IsCalculated != true).ToList();
-            var TotalGoals2 = _context.EmployeeGoalReviews.Where( x => x.EmployeeId == Id.EmployeeId && x.IsCalculated != true).ToList();
-            var managerid = _context.EmployeeGoalReviews.Where(x => x.EmployeeId == Id.EmployeeId).FirstOrDefault();
-            var NumberOfGoals = TotalGoals1.Count();
-            var SummationofRating1 = 0;
-            var SummationofRating2 = 0;
-            if (TotalGoals1.Count > 0)
+            DateTime currentDate = DateTime.Now;
+            DateTime previousMonthDate = currentDate.AddMonths(-1);
+            int previousYear = previousMonthDate.Year;
+            int previousMonth = previousMonthDate.Month;
+            
+            var Id = _context.EmployeeModules.Where(x => x.IsActivated == true && x.IsDeleted != true && x.EmployeeId == EmpId ).FirstOrDefault();
+            if(Id != null)
             {
-                GoalRating rating = new GoalRating();
-                foreach (var item in TotalGoals1)
-                {
-                    SummationofRating1 += Convert.ToInt32((item.GoalRating));
-                    item.IsCalculated= true;
-                    _context.ManagerGoalReviews.Update(item);
-                    _context.SaveChanges();
-                }
-                foreach (var item in TotalGoals2)
-                {
-                    SummationofRating2 += Convert.ToInt32((item.GoalRating));
-                    item.IsCalculated = true;
-                    _context.EmployeeGoalReviews.Update(item);
-                    _context.SaveChanges();
-                } 
+                decimal SummationofRating1 = 0;
+                decimal SummationofRating2 = 0;
+                int numberOfMGoals = 0;
+                int numberOfEGoals = 0;
+                
+                  //  var Emp = _context.EmployeeModules.Where(x => x.EmployeeId == item.EmployeeId && x.IsActivated == true && x.IsDeleted != true).FirstOrDefault();
+                    var getGoals = _context.GoalModules.Where(x => x.EmployeeId == Id.EmployeeId && x.CreatedAt.Year.Equals(previousYear) && x.CreatedAt.Month.Equals(previousMonth)).ToList();
+                    numberOfMGoals = getGoals.Count();
+                    numberOfEGoals = getGoals.Count();
+                    if (getGoals.Count > 0)
+                    {
+                        foreach(var goal in getGoals)
+                        {
+                            var Mgoals = _context.ManagerGoalReviews.Where(x => x.EmployeeId == goal.EmployeeId && x.GoalId == goal.GoalId && x.IsCalculated != true).ToList();
+                            var Egoals = _context.EmployeeGoalReviews.Where(x => x.EmployeeId == goal.EmployeeId && x.GoalId == goal.GoalId && x.IsCalculated != true).ToList();
+                           
+                            if (Mgoals.Count > 0)
+                            {
+                                
+                                foreach (var data in Mgoals)
+                                {
+                                    SummationofRating1 += Convert.ToDecimal((data.GoalRating));
+                                    data.IsCalculated = true;
+                                    _context.ManagerGoalReviews.Update(data);
+                                    _context.SaveChanges();
+                                }
+                            }
+                            if (Egoals.Count > 0)
+                            {
+                                foreach (var data in Egoals)
+                                {
+                                    SummationofRating2 += Convert.ToDecimal((data.GoalRating));
+                                    data.IsCalculated = true;
+                                    _context.EmployeeGoalReviews.Update(data);
+                                    _context.SaveChanges();
+                                }
+                            }
+                        }
+                    }
+                    
+                  
+                    GoalRating rating = new GoalRating();
 
-                var a = SummationofRating1 / NumberOfGoals;
-                var b = SummationofRating2 / NumberOfGoals; 
-                rating.EmployeeId= Id.EmployeeId;
-                rating.ManagerId = managerid.AssingedManagerId;
-                rating.RatingbyManager = a;
-                rating.RatingbyEmployee = b;
-                rating.RatingbyManagerCalculatedAt = DateTime.Now;
-                rating.RatingbyEmployeeCalculatedAt = DateTime.Now;
-                _context.GoalRatings.Add(rating);
-                _context.SaveChanges();
+                    rating.EmployeeId = Id.EmployeeId;
+                    rating.ManagerId = Id.FirstLevelReportingManager;
+                    rating.RatingbyManagerCalculatedAt = DateTime.Now;
+                    rating.RatingbyEmployeeCalculatedAt = DateTime.Now;
+                    
 
-            }
-           
+                    if (SummationofRating1 != 0 && numberOfMGoals != 0)
+                    {
+                        var a = SummationofRating1 / numberOfMGoals;
+                        rating.RatingbyManager = a;
+                        
+                    }
+                    if(SummationofRating2!= 0 && numberOfEGoals != 0)
+                    {
+                        var b = SummationofRating2 / numberOfEGoals;
+                        rating.RatingbyEmployee = b;
+                    }
+
+                    _context.GoalRatings.Add(rating);
+                    _context.SaveChanges();
+
+                
+            }         
         }
+
+
+
+
+
+        public void AnnualPerformanceRatingCalculation()
+        {
+            var Id = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true).ToList();
+
+            DateTime endDate = DateTime.Now;
+            DateTime startDate = endDate.AddMonths(-12);
+            if(Id.Count > 0)
+            {
+                foreach(var id in Id)
+                {
+                    var goals = _context.GoalRatings.Where(x => x.EmployeeId == id.EmployeeId && x.RatingbyManagerCalculatedAt.Value.Date >= startDate && x.RatingbyManagerCalculatedAt <= endDate).ToList();
+                    if (goals.Count > 0)
+                    {
+                        decimal allGoal = 0;
+                        var NoGoal = goals.Count();
+                        foreach (var goal in goals)
+                        {
+                            allGoal += Convert.ToDecimal((goal.RatingbyManager));
+                        }
+                        var a = allGoal / NoGoal;
+
+                        id.PerformanceLevel = a;
+                       
+                        if (a >= (decimal)3.5)
+                        {
+                            id.PerformanceStage = 1;
+                        }
+                        else if (a < (decimal)3.5 && a >= (decimal)2.5)
+                        {
+                            id.PerformanceStage = 2;
+                        }
+                        else
+                        {
+                            id.PerformanceStage = 3;
+                        }
+
+                        _context.EmployeeModules.Update(id);
+                        _context.SaveChanges();
+                    }
+                }
+               
+            }
+
+            
+        }
+
         public void Frezze()
         {
             
@@ -743,7 +833,7 @@ namespace PMS_API.Services
                 var month = new DateTime(today.Year, today.Month, 1);
                 var first = month.AddMonths(-1);
                 var last = month.AddDays(-1);
-
+                
 
                 GoalVM goalVM = new GoalVM();
                 goalVM.Goalname = a.Goalname;
@@ -861,6 +951,21 @@ namespace PMS_API.Services
 
                 }
             }
+        }
+        public void PerformanceCalculation(int EmployeeId)
+        {
+
+            var a = _context.GoalRatings.Where(x => x.EmployeeId == EmployeeId && x.RatingbyEmployeeCalculatedAt.Value.Month == DateTime.Now.AddMonths(-1).Month).ToList();
+            if(a.Count > 0)
+            {
+               var numberOfGoals = a.Count;
+                var SummationofRating1 = 0;
+                foreach (var rate in a)
+                {
+                    SummationofRating1 += Convert.ToInt32((rate.RatingbyManager));
+                }
+            }
+
         }
         public void Save()
         {

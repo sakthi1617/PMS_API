@@ -41,7 +41,7 @@ namespace PMS_API.Data
         public virtual DbSet<ManagerGoalReview> ManagerGoalReviews { get; set; } = null!;
         public virtual DbSet<ManagersTbl> ManagersTbls { get; set; } = null!;
         public virtual DbSet<ManangerAttachment> ManangerAttachments { get; set; } = null!;
-        public virtual DbSet<Potential> Potentials { get; set; } = null!;
+        public virtual DbSet<Stage> Stages { get; set; } = null!;
         public virtual DbSet<RequestForApproved> RequestForApproveds { get; set; } = null!;
         public virtual DbSet<ResponseEmail> ResponseEmails { get; set; } = null!;
         public virtual DbSet<Role> Roles { get; set; } = null!;
@@ -447,10 +447,10 @@ namespace PMS_API.Data
                     .HasConstraintName("FK__ManangerA__Manag__367C1819");
             });
 
-            modelBuilder.Entity<Potential>(entity =>
-            {
-                entity.ToTable("Potential");
-            });
+            //modelBuilder.Entity<Potential>(entity =>
+            //{
+            //    entity.ToTable("Potential");
+            //});
 
             modelBuilder.Entity<RequestForApproved>(entity =>
             {

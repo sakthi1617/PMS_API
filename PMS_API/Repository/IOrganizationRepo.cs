@@ -31,8 +31,9 @@ namespace PMS_API.Repository
         public void AddTeam(TeamVM team);
 
         public List<Teamlist> GetTeam(int DepartmentID);
+        public List<getDesignation> GetDesignation(int DepartmentID);
 
-         public void Save();
+        public void Save();
 
         //  public string AddUserLevel(int? designationId, int? departmentId, int? employeeId);
         //  public void AddDesignation(DesignationVM model);

@@ -5,4 +5,5 @@
         public int? DepartmentId { get; set; }
         public string? DesignationName { get; set; }
     }
+    
 }
