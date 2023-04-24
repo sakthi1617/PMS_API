@@ -50,6 +50,33 @@ namespace PMS_API.Controllers
         }
         #endregion
 
+        #region Remove SkillWeightage
+        [HttpDelete]
+        public async Task<IActionResult> RemoveSkillWeightage(DeleteWeightage weightage)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    repository.RemoveSkillWeightage(weightage);
+                    return StatusCode(StatusCodes.Status201Created,
+                         new ResponseStatus { status = "Success", message = "Weightage Deleted Successfully.", statusCode = StatusCodes.Status201Created });
+                }
+                return StatusCode(StatusCodes.Status400BadRequest,
+                        new ResponseStatus { status = "Error", message = "Invalid Data.", statusCode = StatusCodes.Status400BadRequest });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
         #region Adding Additional skills which was access only by Admin
         [HttpPost]
         [Route("AddAdditionalSkills")]
@@ -226,15 +253,15 @@ namespace PMS_API.Controllers
         }
         #endregion
 
-        #region Listing Skill by DepartmentId which wass access by All
+        #region Listing Skill by DepartmentId and DesignationId which wass access by All
         [HttpGet]
         [Route("SkillbyDepartmentID")]
         [Authorize(Roles = "Admin,User")]
-        public async Task<IActionResult> SkillbyDepartmentID(int id)
+        public async Task<IActionResult> SkillbyDepartmentID(int DeptId , int DesigId)
         {
             try
             {
-                var skillbydeptid = repository.SkillbyDepartmentID(id).ToList();
+                var skillbydeptid = repository.SkillbyDepartmentID(DeptId, DesigId).ToList();
                 return Ok(new
                 {
 

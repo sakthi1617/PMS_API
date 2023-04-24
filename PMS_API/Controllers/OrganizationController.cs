@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using Org.BouncyCastle.Asn1.Ocsp;
 using PMS_API.Data;
 using PMS_API.LogHandling;
@@ -185,6 +186,35 @@ namespace PMS_API.Controllers
             try
             {
                 var a = repository.GetTeam(DepartmentID);
+                return Ok(new
+                {
+
+                    list = a,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Skill List.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+
+        }
+        #endregion
+
+        #region Get Designation
+        [HttpGet]
+        [Route("GetDesignation")]
+        public async Task<IActionResult> GetDesignation(int DepartmentID)
+        {
+            try
+            {
+                var a = repository.GetDesignation(DepartmentID);
                 return Ok(new
                 {
 
@@ -615,6 +645,8 @@ namespace PMS_API.Controllers
 
 
 
+
+
         #region Adding Designation which was access only by Admin
         //[HttpPost]
         //[Route("AddDesignation")]
@@ -816,6 +848,7 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
+    
     }
 }
 

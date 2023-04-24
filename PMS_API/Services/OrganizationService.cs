@@ -144,6 +144,21 @@ namespace PMS_API.Services
             
         }
 
+        public List<getDesignation> GetDesignation(int DepartmentID)
+        {
+            List<getDesignation> designation = new List<getDesignation>();
+            var a = _context.Designations1.Where(x => x.DepartmentId == DepartmentID).ToList();
+
+            foreach (var item in a)
+            {
+                getDesignation list = new getDesignation();
+                list.DesignationId = item.DesignationId;
+                list.DesignationName = item.DesignationName;
+                designation.Add(list);
+            }
+            return designation;
+        }
+
         public string UpdateEmployee(string EmployeeIdentity, EmployeeVM model)
         {
             try
@@ -437,6 +452,9 @@ namespace PMS_API.Services
             }
             return testlist.ToList();
         }
+
+
+
         public void Save()
         {
             _context.SaveChanges();

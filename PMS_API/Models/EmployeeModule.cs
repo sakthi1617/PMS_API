@@ -51,6 +51,9 @@ namespace PMS_API.Models
         public bool? IsActivated { get; set; }
         public bool? IsDeleted { get; set; }
         public decimal? Salary { get; set; }
+        public decimal? PerformanceLevel { get; set; }
+        public int? PotentialStage { get; set; }
+        public int? PerformanceStage { get; set; }
 
         public virtual Department? Department { get; set; }
         public virtual Designation? Designation { get; set; }
@@ -58,6 +61,7 @@ namespace PMS_API.Models
         public virtual ManagersTbl? FirstLevelReportingManagerNavigation { get; set; }
         public virtual Role? Role { get; set; }
         public virtual Team? Team { get; set; }
+        
         public virtual ManagersTbl? SecondLevelReportingManagerNavigation { get; set; }
         public virtual ICollection<DelayedGoal> DelayedGoals { get; set; }
         public virtual ICollection<EmployeeGoalReview> EmployeeGoalReviews { get; set; }
