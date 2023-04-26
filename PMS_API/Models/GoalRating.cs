@@ -12,7 +12,6 @@ namespace PMS_API.Models
         public DateTime? RatingbyEmployeeCalculatedAt { get; set; }
         public decimal? RatingbyManager { get; set; }
         public DateTime? RatingbyManagerCalculatedAt { get; set; }
-
         public virtual EmployeeModule? Employee { get; set; }
     }
 }

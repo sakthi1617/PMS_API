@@ -237,7 +237,7 @@ namespace PMS_API.Controllers
         #endregion
 
         #region Updating EMployee which wass access only by Admin
-        [HttpPut]
+        [HttpPost]
         [Route("UpdateEmployee")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateEmployee(string EmployeeIdentity, EmployeeVM employee)
@@ -276,7 +276,7 @@ namespace PMS_API.Controllers
         #endregion
 
         #region Updating Department which wass access only by Admin
-        [HttpPut]
+        [HttpPost]
         [Route("UpdateDepertment")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDepertment(int id, DepartmentVM department)
@@ -319,7 +319,7 @@ namespace PMS_API.Controllers
         #endregion
 
         #region Updating Designation which was access only by Admin
-        [HttpPut]
+        [HttpPost]
         [Route("UpdateDesignation")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDesignation(int id, DesignationVM designation)
@@ -643,8 +643,128 @@ namespace PMS_API.Controllers
         }
         #endregion
 
+        #region EmployeeCountByStages
+        [HttpGet]
+        [Route("EmployeeCountByStages")]
+        public async Task<IActionResult> EmployeeCountByStages()
+        {
+            try
+            {
+                var counts = repository.nineStages();
+                if (counts == null)
+                {
+                    return NotFound(new
+                    {
+                        ResponseStatus = new ResponseStatus { status = "Error", message = "Data Unavailable", statusCode = StatusCodes.Status404NotFound }
+                    });
+                }
+                return Ok(new
+                {
+
+                    list = counts,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Employee Counts.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region EmployeeListByStages
+        [HttpGet]
+        [Route("EmployeeListByStages")]
+        public async Task<IActionResult> EmployeeListByStages(int performancestage , int potentialstage)
+        {
+            try
+            {
+
+                var result = repository.EmployeeListByStages(performancestage,potentialstage);
 
 
+                return Ok(new SuccessResponse<object>
+                {
+
+                    ModelData = new
+                    {
+
+                        EMployeeDetails = result
+                    },
+                    statusCode = "200",
+                    Response = "ok"
+
+                });
+            }
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Get Reporting person
+        [HttpGet]
+        [Route("GetReportingPerson")]
+        public async Task<IActionResult> GetReportingPerson()
+        {
+            try
+            {
+                var result = repository.GetReportingPerson();
+                return Ok(new
+                {
+
+                    list = result,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Reporting Person List", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Anual Rating Publish
+        [HttpPost]
+        [Route("annualRatingPublish")]
+        public async Task<IActionResult> annualRatingPublish(bool approvel)
+        {
+            try
+            {
+                repository.annualRatingPublish(approvel);
+                return Ok(new
+                {
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Rating", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
 
 
         #region Adding Designation which was access only by Admin
@@ -822,33 +942,8 @@ namespace PMS_API.Controllers
         //    }
         //}
         #endregion
-        #region Get Reporting person
-        [HttpGet]
-        [Route("GetReportingPerson")]
-        public async Task<IActionResult> GetReportingPerson()
-        {
-            try
-            {
-                var result = repository.GetReportingPerson();
-                return Ok(new
-                {
 
-                    list = result,
-                    ResponseStatus = new ResponseStatus { status = "Success", message = "Reporting Person List", statusCode = StatusCodes.Status200OK }
-                });
-            }
-            catch (Exception ex)
-            {
-                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
-                return BadRequest(new FailureResponse<object>
-                {
-                    Error = ex.Message,
-                    IsreponseSuccess = false
-                });
-            }
-        }
-        #endregion
-    
+
     }
 }
 
