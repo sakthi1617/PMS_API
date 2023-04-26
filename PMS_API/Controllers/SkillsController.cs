@@ -186,7 +186,7 @@ namespace PMS_API.Controllers
         #endregion
 
         #region Updating Skill which was access only by Admin
-        [HttpPut]
+        [HttpPost]
         [Route("UpdateSkill")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateSkill(int id, SkillsVM skill)
@@ -282,7 +282,7 @@ namespace PMS_API.Controllers
         #endregion
 
         #region UpdateSkillWeightages which wass access by All
-        [HttpPut]
+        [HttpPost]
         [Route("UpdateSkillWeightages")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateSkillWeightages(int skillId, string employeeIdentity, int weightage)

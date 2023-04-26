@@ -73,7 +73,7 @@ namespace PMS_API.Controllers
         }
         #endregion
         #region Update Goals For Employee
-        [HttpPut]
+        [HttpPost]
         [Route("UpdateGoalForEmployee")]
         public async Task<IActionResult> UpdateGoalForEmployee(string EmployeeIdentity, int goalid, GoalVM model)
         {
@@ -202,7 +202,7 @@ namespace PMS_API.Controllers
         }
         #endregion
         #region Update Employee Goal Review
-        [HttpPut]
+        [HttpPost]
         [Route("UpdateEmployeeGoalReview")]
         public async Task<IActionResult> UpdateEmployeeGoalReview([FromForm] updateEmployeeReviewVM reviewVM)
         {
@@ -294,7 +294,7 @@ namespace PMS_API.Controllers
         }
         #endregion
         #region Update Manager Goal Review
-        [HttpPut]
+        [HttpPost]
         [Route("UpdateManagerGoalReview")]
         public async Task<IActionResult>UpdateManagerGoalReview([FromForm] ManagerReviewVM model)
         {

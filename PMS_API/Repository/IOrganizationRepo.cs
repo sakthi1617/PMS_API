@@ -32,7 +32,9 @@ namespace PMS_API.Repository
 
         public List<Teamlist> GetTeam(int DepartmentID);
         public List<getDesignation> GetDesignation(int DepartmentID);
-
+         public NineStage nineStages();
+        public void annualRatingPublish(bool approvel);
+        public dynamic EmployeeListByStages(int potential, int performance);
         public void Save();
 
         //  public string AddUserLevel(int? designationId, int? departmentId, int? employeeId);

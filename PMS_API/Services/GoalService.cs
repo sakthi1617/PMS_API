@@ -536,11 +536,6 @@ namespace PMS_API.Services
 
            
         }
-
-
-
-
-      
         public void GoalPerformanceRatingCalculation(int EmpId)
         {
             DateTime currentDate = DateTime.Now;
@@ -618,11 +613,6 @@ namespace PMS_API.Services
                 
             }         
         }
-
-
-
-
-
         public void AnnualPerformanceRatingCalculation()
         {
             var Id = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true).ToList();
@@ -668,7 +658,6 @@ namespace PMS_API.Services
 
             
         }
-
         public void Frezze()
         {
             
@@ -971,5 +960,7 @@ namespace PMS_API.Services
         {
             _context.SaveChanges();
         }
+
+
     }
 }
