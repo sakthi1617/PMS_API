@@ -237,7 +237,7 @@ namespace PMS_API.Controllers
         #endregion
 
         #region Updating EMployee which wass access only by Admin
-        [HttpPost]
+        [HttpPut]
         [Route("UpdateEmployee")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateEmployee(string EmployeeIdentity, EmployeeVM employee)
@@ -276,7 +276,7 @@ namespace PMS_API.Controllers
         #endregion
 
         #region Updating Department which wass access only by Admin
-        [HttpPost]
+        [HttpPut]
         [Route("UpdateDepertment")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDepertment(int id, DepartmentVM department)
@@ -319,7 +319,7 @@ namespace PMS_API.Controllers
         #endregion
 
         #region Updating Designation which was access only by Admin
-        [HttpPost]
+        [HttpPut]
         [Route("UpdateDesignation")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDesignation(int id, DesignationVM designation)
@@ -741,17 +741,17 @@ namespace PMS_API.Controllers
         }
         #endregion
 
-        #region Anual Rating Publish
+        #region Include Exclude Ratings
         [HttpPost]
-        [Route("annualRatingPublish")]
-        public async Task<IActionResult> annualRatingPublish(bool approvel)
+        [Route("AdminRatingApprove")]
+        public async Task<IActionResult> AdminRatingApprove(string EmployeeIdentity , bool approvel)
         {
             try
             {
-                repository.annualRatingPublish(approvel);
+                repository.AdminRatingApprove(EmployeeIdentity,approvel);
                 return Ok(new
                 {
-                    ResponseStatus = new ResponseStatus { status = "Success", message = "Rating", statusCode = StatusCodes.Status200OK }
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Annual Ratings are Published", statusCode = StatusCodes.Status200OK }
                 });
             }
             catch (Exception ex)
@@ -766,7 +766,91 @@ namespace PMS_API.Controllers
         }
         #endregion
 
+        #region Anual Rating Publish
+        [HttpPost]
+        [Route("annualRatingPublish")]
+        public async Task<IActionResult> annualRatingPublish(bool approvel)
+        {
+            try
+            {
+                repository.annualRatingPublish(approvel);
+                return Ok(new
+                {
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Annual Ratings are Published", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
 
+        #region Rating Accept by Employees
+        [HttpPost]
+        [Route("AcceptRating")]
+        public async Task<IActionResult> AcceptRating ( string EmployeeIdentity , bool approvel)
+        {
+            try
+            {
+                repository.AcceptRating(EmployeeIdentity,approvel);
+                return Ok(new
+                {
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Responce Updated", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Salary Increment
+        [HttpPost]
+        [Route("SalaryIncrement")]
+        public async Task<IActionResult> SalaryIncrement(string EmployeeIdentity , decimal incrementPercentage)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var a = repository.SalaryIncrement(EmployeeIdentity, incrementPercentage);
+                    switch (a)
+                    {
+                        case "Employee Salary Upadted":
+                            return StatusCode(StatusCodes.Status201Created,
+                          new ResponseStatus { status = "Success", message = "Employee Salary Upadted", statusCode = StatusCodes.Status201Created });
+                        case "Employee Not Found":
+                            return StatusCode(StatusCodes.Status404NotFound,
+                          new ResponseStatus { status = "Error", message = "Employee Not Found", statusCode = StatusCodes.Status404NotFound });
+                    }
+                }
+                return StatusCode(StatusCodes.Status404NotFound,
+                        new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status404NotFound });
+
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
         #region Adding Designation which was access only by Admin
         //[HttpPost]
         //[Route("AddDesignation")]

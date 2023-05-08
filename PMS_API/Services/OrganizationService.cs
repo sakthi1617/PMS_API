@@ -507,18 +507,96 @@ namespace PMS_API.Services
 
             return nine;
         }
+
+        public void AdminRatingApprove(string EmployeeIdentity, bool approvel)
+        {
+            var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity && x.IsActivated == true && x.IsDeleted != true).FirstOrDefault();
+            if (Id != null)
+            {
+                if (approvel == true)
+                {
+                    Id.IsWantToPublish = true;
+                }
+                else
+                {
+                    Id.IsWantToPublish = false;
+                }
+
+                _context.EmployeeModules.Update(Id);
+                _context.SaveChanges();
+            }
+        }
+        public void AcceptRating(string EmployeeIdentity, bool approvel)
+        {
+            EmployeeModule module = new EmployeeModule();
+            var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity && x.IsActivated == true && x.IsDeleted != true && x.IsWantToPublish == true).FirstOrDefault();
+            if(Id!= null)
+            {
+                if (approvel == true)
+                {
+                    Id.RatingIsaccepted = true;
+                }
+                else
+                {
+                    Id.RatingIsaccepted = false;
+                }
+               
+                _context.EmployeeModules.Update(Id);
+                _context.SaveChanges();
+            }       
+                        
+        }
+        public string SalaryIncrement(string EmployeeIdentity, decimal incrementPercentage)
+        {
+            var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity && x.IsActivated == true && x.IsDeleted != true).FirstOrDefault();
+            if(Id != null)
+            {
+                decimal oldSalary = (decimal)Id.Salary;
+                decimal newSalary = 0;
+
+                var IncrementPercentage = incrementPercentage/ 100;
+                var IncrementAmount = oldSalary * IncrementPercentage;
+                newSalary = oldSalary + IncrementAmount;
+
+                Id.Salary = newSalary;
+                _context.EmployeeModules.Update(Id);    
+                _context.SaveChanges();
+                return "Employee Salary Upadted";
+            }
+            return "Employee Not Found";
+        }
+
+
         public void annualRatingPublish(bool approvel)
         {
             if(approvel == true)
             {
-                var id = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true).ToList();
+                var id = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true && x.IsWantToPublish == true ).ToList();
                 if(id.Count > 0)
                 {
                     foreach(var item in id)
                     {
-                        var msg = " Hi " + item.Name + " Anuual Rating " + DateTime.Now.Year + " Was Published " + "</br>" + " Your 'potential stage = " + item.PotentialStage + "' and Your 'performace stage = " + item.PerformanceStage + "'  Improve your Potential and Performance to Next Level ";
+                        var allrate = _context.MonthwiseRatings.Where(x => x.EmployeeId== item.EmployeeId && x.CalculatedAt.Value.Year == DateTime.Now.Year).FirstOrDefault();
+                        var msg = " Hi " + item.Name + " Anuual Rating " + DateTime.Now.Year + " Was Published " + "</br>" + " Your 'potential stage = " + item.PotentialStage + "' and Your 'performace stage = " + item.PerformanceStage + "'  Improve your Potential and Performance to Next Level " + "Your Month wise ratings are below : " + "January : " + allrate.January  
+                                                                                                                                                                                                                                                                                                                                                 + "February: " + allrate.February
+                                                                                                                                                                                                                                                                                                                                                 + "March: " + allrate.March
+                                                                                                                                                                                                                                                                                                                                                 + "April: " + allrate.April
+                                                                                                                                                                                                                                                                                                                                                 + "May: " + allrate.May
+                                                                                                                                                                                                                                                                                                                                                 + "June: " + allrate.June
+                                                                                                                                                                                                                                                                                                                                                 + "July: " + allrate.July
+                                                                                                                                                                                                                                                                                                                                                 + "August: " + allrate.August
+                                                                                                                                                                                                                                                                                                                                                 + "September: " + allrate.September
+                                                                                                                                                                                                                                                                                                                                                 + "October: " + allrate.October
+                                                                                                                                                                                                                                                                                                                                                 + "November: " + allrate.November
+                                                                                                                                                                                                                                                                                                                                                 + "December: " + allrate.December;
                         var message = new Message(new string[] { item.Email }, "Rating Cycle Notification", msg.ToString(), null);
                         var a = _emailservice.SendEmail(message);
+                        if(a == "ok")
+                        {
+                            item.isPublished= true;
+                            _context.EmployeeModules.Update(item);
+                            _context.SaveChanges();
+                        }
                     }
                 }
                
@@ -619,7 +697,6 @@ namespace PMS_API.Services
         //}
 
         
-
          
     }
 }

@@ -71,6 +71,8 @@ namespace PMS_API.Services
             }
             return "Error";                         
         }
+        //Employee Performance Calculation
+        /* Employee Date * Employee Skills = */
         public string UpdateGoalForEmployee(string EmployeeIdentity, int goalid, GoalVM model)
         {
             var Id = _context.EmployeeModules.Where(x=> x.EmployeeIdentity== EmployeeIdentity).FirstOrDefault();
@@ -105,9 +107,10 @@ namespace PMS_API.Services
         //}
         public List<GoalVM> GetGoalbyEmpId(string EmployeeIdentity)
         {
-             // GoalPerformanceRatingCalculation();
-            AnnualPerformanceRatingCalculation();
+           
             var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity).FirstOrDefault();
+            //GoalPerformanceRatingCalculation(Id.EmployeeId);
+            AnnualPerformanceRatingCalculation();
             var a = (from emp in _context.EmployeeModules
                     join gol in _context.GoalModules
                     on emp.EmployeeId equals gol.EmployeeId
@@ -628,12 +631,58 @@ namespace PMS_API.Services
                     {
                         decimal allGoal = 0;
                         var NoGoal = goals.Count();
+                        MonthwiseRating rate = new MonthwiseRating();
                         foreach (var goal in goals)
                         {
+                           
+                            int abc = goal.RatingbyEmployeeCalculatedAt.Value.Month;
+                            rate.EmployeeId= goal.EmployeeId;
+                            switch (abc)
+                            {
+                                case 1:
+                                    rate.January = goal.RatingbyManager;
+                                    break;
+                                case 2:
+                                    rate.February = goal.RatingbyManager;
+                                    break;
+       
+                                case 3:
+                                    rate.March = goal.RatingbyManager;
+                                    break;
+                                case 4:
+                                    rate.April = goal.RatingbyManager;
+                                    break;
+                                case 5:
+                                    rate.May = goal.RatingbyManager;
+                                    break;
+                                case 6:
+                                    rate.June = goal.RatingbyManager;
+                                    break;
+                                case 7:
+                                    rate.July = goal.RatingbyManager;
+                                    break;
+                                case 8:
+                                    rate.August = goal.RatingbyManager;
+                                    break;
+                                case 9:
+                                    rate.September = goal.RatingbyManager;
+                                    break;
+                                case 10:
+                                    rate.October = goal.RatingbyManager;
+                                    break;
+                                case 11:
+                                    rate.November = goal.RatingbyManager;
+                                    break;
+                                case 12:
+                                    rate.December = goal.RatingbyManager;
+                                    break;
+                            }
+                                
                             allGoal += Convert.ToDecimal((goal.RatingbyManager));
                         }
                         var a = allGoal / NoGoal;
-
+                        rate.CalculatedAt = DateTime.Now;
+                        rate.OverallRating= a;
                         id.PerformanceLevel = a;
                        
                         if (a >= (decimal)3.5)
@@ -648,7 +697,10 @@ namespace PMS_API.Services
                         {
                             id.PerformanceStage = 3;
                         }
+                        id.IsWantToPublish = true;
 
+                        _context.MonthwiseRatings.Add(rate);
+                        _context.SaveChanges();
                         _context.EmployeeModules.Update(id);
                         _context.SaveChanges();
                     }
