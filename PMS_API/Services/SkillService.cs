@@ -22,15 +22,39 @@ namespace PMS_API.Services
                 foreach( var skill in weightage.SkillId )
                 {
                     Weightage weightage1 = new Weightage();
-                    weightage1.DepartmentId = weightage.DepartmentId;
-                    weightage1.DesignationId = weightage.DesignationId;
-                    weightage1.TeamId= weightage.TeamId;
-                    weightage1.SkillId = skill;
-                    weightage1.Weightage1 = 0;
-                    _context.Weightages.Add(weightage1);
-                    _context.SaveChanges();
+                    var a = _context.Weightages.Where(x => x.SkillId == skill && x.DesignationId == weightage.DesignationId && x.DepartmentId == weightage.DepartmentId).FirstOrDefault();
+                    if (a == null)
+                    {
+                        weightage1.DepartmentId = weightage.DepartmentId;
+                        weightage1.DesignationId = weightage.DesignationId;
+                        weightage1.TeamId = weightage.TeamId;
+                        weightage1.SkillId = skill;
+                        weightage1.Weightage1 = 0;
+                        _context.Weightages.Add(weightage1);
+                        _context.SaveChanges();
+                       
+                    }
+                   
+                    
                 }
-                
+            }
+            
+        }
+        public void RemoveSkillWeightage(DeleteWeightage weightage)
+        {
+            if(weightage.TeamId == 0 || weightage.TeamId == null)
+            {
+                var skill = _context.Weightages.Where(x => x.DepartmentId == weightage.DepartmentId && x.DesignationId == weightage.DesignationId && x.SkillId == weightage.SkillId).FirstOrDefault();
+                if(skill != null)
+                _context.Weightages.Remove(skill);
+                _context.SaveChanges();
+            }
+            else
+            {
+                var skill = _context.Weightages.Where(x => x.DepartmentId == weightage.DepartmentId && x.DesignationId == weightage.DesignationId && x.SkillId == weightage.SkillId && x.TeamId == weightage.TeamId).FirstOrDefault();
+                if(skill != null)
+                _context.Weightages.Remove(skill);
+                _context.SaveChanges();
             }
            
         }
@@ -117,9 +141,9 @@ namespace PMS_API.Services
         {
             return _context.Skills.ToList();
         }
-        public List<Weightage> SkillbyDepartmentID(int id)
+        public List<Weightage> SkillbyDepartmentID(int DeptId , int DesigId)
         {
-            return _context.Weightages.Where(x => x.DepartmentId == id).ToList();
+            return _context.Weightages.Where(x => x.DepartmentId == DeptId && x.DesignationId == DesigId).ToList();
         }
         public string UpdateSkillWeightages(int skillId, string employeeIdentity, int weightage)
         {
@@ -142,29 +166,14 @@ namespace PMS_API.Services
             {
                 return "MaxLevel";
             }
-            // var user = _context.EmployeeModules.Where(x => x.EmployeeId.Equals(EmpID) && x.IsDeleted.Equals(false)).FirstOrDefault();//--------------------
-
 
             if (Id != null)
             {
-                //var data = from emp in _context.EmployeeModules
-                //           join man in _context.ManagersTbls
-                //           on emp.FirstLevelReportingManager equals man.ManagerId
-                //           where emp.EmployeeId == Id.EmployeeId && emp.IsDeleted != true //------------------
-                //           select new { emp, man };
+      
 
                 var first = _context.EmployeeModules.Where(x => x.EmployeeId == Id.FirstLevelReportingManager && x.IsDeleted != true).FirstOrDefault();
                 var second = _context.EmployeeModules.Where(x => x.EmployeeId == Id.SecondLevelReportingManager && x.IsDeleted != true).FirstOrDefault();
-                //var Data = from emp in _context.EmployeeModules
-                //           join man in _context.ManagersTbls
-                //           on emp.SecondLevelReportingManager equals man.ManagerId
-                //           where emp.EmployeeId == Id.EmployeeId && emp.IsDeleted != true  //---------------------
-                //           select new { emp, man };
-
-                //var first = data.FirstOrDefault();
-                //var second = Data.FirstOrDefault();
-
-
+                
                 RequestForApproved request = new RequestForApproved();
 
                 request.EmployeeId = Id.EmployeeId;
@@ -209,24 +218,13 @@ namespace PMS_API.Services
             var user = _context.RequestForApproveds.Where(x => x.ReqId == reqid && x.IsActivated == true).FirstOrDefault();
             if (user != null)
             {
-                //var mail1 = from emp in _context.EmployeeModules
-                //            join man in _context.ManagersTbls
-                //            on emp.FirstLevelReportingManager equals man.ManagerId
-                //            where emp.EmployeeId == user.EmployeeId
-                //            select new { emp, man };
+           
                 var a = _context.EmployeeModules.Where(x => x.EmployeeId == user.EmployeeId).FirstOrDefault();
                 var first = _context.EmployeeModules.Where(x => x.EmployeeId == a.FirstLevelReportingManager).FirstOrDefault();
                 var second = _context.EmployeeModules.Where(x => x.EmployeeId == a.SecondLevelReportingManager).FirstOrDefault();
-                //var mail2 = from emp in _context.EmployeeModules
-                //            join man in _context.ManagersTbls
-                //            on emp.SecondLevelReportingManager equals man.ManagerId
-                //            where emp.EmployeeId == user.EmployeeId
-                //            select new { emp, man };
-
+              
                 var skillname = _context.Skills.Where(x => x.SkillId == user.Skillid).FirstOrDefault();
-                //var a = mail1.FirstOrDefault();
-                //var b = mail2.FirstOrDefault();
-
+            
                 if (a != null)
                 {
                     ResponseEmail email = new ResponseEmail();
@@ -322,7 +320,20 @@ namespace PMS_API.Services
                 TotalPossibleScore += Convert.ToDecimal((100 * item.Weightage));
             }
             SkillPotential = Convert.ToInt32(((WeightedSkillScore / TotalPossibleScore) * 100));
+
             employee.PotentialLevel = SkillPotential;
+            if(SkillPotential >= 75)
+            {
+                employee.PotentialStage = 1;
+            }
+            else if(SkillPotential < 75 && SkillPotential >= 50)
+            {
+                employee.PotentialStage = 2;
+            }
+            else
+            {
+                employee.PotentialStage = 3;
+            }
             _context.EmployeeModules.Update(employee);
             _context.SaveChanges();
 

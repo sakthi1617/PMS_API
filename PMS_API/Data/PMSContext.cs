@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Org.BouncyCastle.Utilities.Collections;
 using PMS_API.Models;
 using PMS_API.ViewModels;
+
+
 namespace PMS_API.Data
 {
 
@@ -41,7 +43,7 @@ namespace PMS_API.Data
         public virtual DbSet<ManagerGoalReview> ManagerGoalReviews { get; set; } = null!;
         public virtual DbSet<ManagersTbl> ManagersTbls { get; set; } = null!;
         public virtual DbSet<ManangerAttachment> ManangerAttachments { get; set; } = null!;
-        public virtual DbSet<Potential> Potentials { get; set; } = null!;
+        public virtual DbSet<Stage> Stages { get; set; } = null!;
         public virtual DbSet<RequestForApproved> RequestForApproveds { get; set; } = null!;
         public virtual DbSet<ResponseEmail> ResponseEmails { get; set; } = null!;
         public virtual DbSet<Role> Roles { get; set; } = null!;
@@ -55,6 +57,7 @@ namespace PMS_API.Data
         public virtual DbSet<Weightage> Weightages { get; set; } = null!;
         public virtual DbSet<DelayedGoal> DelayedGoals { get; set; } = null!;
         public virtual DbSet<Team> Teams { get; set; } = null!;
+        public virtual DbSet<MonthwiseRating> MonthwiseRatings { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -447,10 +450,10 @@ namespace PMS_API.Data
                     .HasConstraintName("FK__ManangerA__Manag__367C1819");
             });
 
-            modelBuilder.Entity<Potential>(entity =>
-            {
-                entity.ToTable("Potential");
-            });
+            //modelBuilder.Entity<Potential>(entity =>
+            //{
+            //    entity.ToTable("Potential");
+            //});
 
             modelBuilder.Entity<RequestForApproved>(entity =>
             {
@@ -647,6 +650,38 @@ namespace PMS_API.Data
                     .WithMany(p => p.DelayedGoals)
                     .HasForeignKey(d => d.EmployeeId)
                     .HasConstraintName("FK__Delayed_G__Emplo__55F4C372");
+            });
+            modelBuilder.Entity<MonthwiseRating>(entity =>
+            {
+                entity.ToTable("MonthwiseRating");
+
+                entity.Property(e => e.April).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.August).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.CalculatedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.December).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.February).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.January).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.July).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.June).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.March).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.May).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.November).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.October).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.OverallRating).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.September).HasColumnType("decimal(18, 2)");
             });
 
             modelBuilder.Entity<Team>(entity =>

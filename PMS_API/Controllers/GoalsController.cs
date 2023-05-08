@@ -338,7 +338,7 @@ namespace PMS_API.Controllers
 
         }
         #endregion
-        #region Employee Extention Request
+        #region Employee Extention Request  
         [HttpPost]
         [Route("EmployeeExtentionRequest")]
         public async Task<IActionResult> EmployeeExtentionRequest(string EmployeeIdentity, int GoalID)
@@ -544,7 +544,7 @@ namespace PMS_API.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    repository.GoalRatingCalculation(EmployeeIdentity);
+                   // repository.GoalRatingCalculation(EmployeeIdentity);
                     return Ok();
                 }
                 return BadRequest();

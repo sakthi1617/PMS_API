@@ -9,8 +9,6 @@
         public string? EmpReview { get; set; }
         public IFormFileCollection? Attachment { get; set; }
         public decimal? GoalRating { get; set; }
-
-
     }
 
     public class updateEmployeeReviewVM

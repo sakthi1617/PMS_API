@@ -22,7 +22,7 @@ namespace PMS_API.Repository
         public string EmpExtReqApprove(bool approved, int GoalId);
         public string ManagerExtReqApprove(bool approved, int GoalId);
         public string ManagerGoalReview(ManagerReviewVM model);
-        public void GoalRatingCalculation(string EmployeeIdentity);
+        
         public void ExtentionUpdate();
         public void sendMailtoAdmin();
         public void AssignToEmployee();

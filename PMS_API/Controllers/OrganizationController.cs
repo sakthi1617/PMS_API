@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using Org.BouncyCastle.Asn1.Ocsp;
 using PMS_API.Data;
 using PMS_API.LogHandling;
@@ -185,6 +186,35 @@ namespace PMS_API.Controllers
             try
             {
                 var a = repository.GetTeam(DepartmentID);
+                return Ok(new
+                {
+
+                    list = a,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Skill List.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+
+        }
+        #endregion
+
+        #region Get Designation
+        [HttpGet]
+        [Route("GetDesignation")]
+        public async Task<IActionResult> GetDesignation(int DepartmentID)
+        {
+            try
+            {
+                var a = repository.GetDesignation(DepartmentID);
                 return Ok(new
                 {
 
@@ -613,8 +643,214 @@ namespace PMS_API.Controllers
         }
         #endregion
 
+        #region EmployeeCountByStages
+        [HttpGet]
+        [Route("EmployeeCountByStages")]
+        public async Task<IActionResult> EmployeeCountByStages()
+        {
+            try
+            {
+                var counts = repository.nineStages();
+                if (counts == null)
+                {
+                    return NotFound(new
+                    {
+                        ResponseStatus = new ResponseStatus { status = "Error", message = "Data Unavailable", statusCode = StatusCodes.Status404NotFound }
+                    });
+                }
+                return Ok(new
+                {
+
+                    list = counts,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Employee Counts.", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region EmployeeListByStages
+        [HttpGet]
+        [Route("EmployeeListByStages")]
+        public async Task<IActionResult> EmployeeListByStages(int performancestage , int potentialstage)
+        {
+            try
+            {
+
+                var result = repository.EmployeeListByStages(performancestage,potentialstage);
 
 
+                return Ok(new SuccessResponse<object>
+                {
+
+                    ModelData = new
+                    {
+
+                        EMployeeDetails = result
+                    },
+                    statusCode = "200",
+                    Response = "ok"
+
+                });
+            }
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Get Reporting person
+        [HttpGet]
+        [Route("GetReportingPerson")]
+        public async Task<IActionResult> GetReportingPerson()
+        {
+            try
+            {
+                var result = repository.GetReportingPerson();
+                return Ok(new
+                {
+
+                    list = result,
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Reporting Person List", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Include Exclude Ratings
+        [HttpPost]
+        [Route("AdminRatingApprove")]
+        public async Task<IActionResult> AdminRatingApprove(string EmployeeIdentity , bool approvel)
+        {
+            try
+            {
+                repository.AdminRatingApprove(EmployeeIdentity,approvel);
+                return Ok(new
+                {
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Annual Ratings are Published", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Anual Rating Publish
+        [HttpPost]
+        [Route("annualRatingPublish")]
+        public async Task<IActionResult> annualRatingPublish(bool approvel)
+        {
+            try
+            {
+                repository.annualRatingPublish(approvel);
+                return Ok(new
+                {
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Annual Ratings are Published", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Rating Accept by Employees
+        [HttpPost]
+        [Route("AcceptRating")]
+        public async Task<IActionResult> AcceptRating ( string EmployeeIdentity , bool approvel)
+        {
+            try
+            {
+                repository.AcceptRating(EmployeeIdentity,approvel);
+                return Ok(new
+                {
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Responce Updated", statusCode = StatusCodes.Status200OK }
+                });
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Salary Increment
+        [HttpPost]
+        [Route("SalaryIncrement")]
+        public async Task<IActionResult> SalaryIncrement(string EmployeeIdentity , decimal incrementPercentage)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var a = repository.SalaryIncrement(EmployeeIdentity, incrementPercentage);
+                    switch (a)
+                    {
+                        case "Employee Salary Upadted":
+                            return StatusCode(StatusCodes.Status201Created,
+                          new ResponseStatus { status = "Success", message = "Employee Salary Upadted", statusCode = StatusCodes.Status201Created });
+                        case "Employee Not Found":
+                            return StatusCode(StatusCodes.Status404NotFound,
+                          new ResponseStatus { status = "Error", message = "Employee Not Found", statusCode = StatusCodes.Status404NotFound });
+                    }
+                }
+                return StatusCode(StatusCodes.Status404NotFound,
+                        new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status404NotFound });
+
+            }
+            catch (Exception ex)
+            {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
         #region Adding Designation which was access only by Admin
         //[HttpPost]
         //[Route("AddDesignation")]
@@ -790,32 +1026,8 @@ namespace PMS_API.Controllers
         //    }
         //}
         #endregion
-        #region Get Reporting person
-        [HttpGet]
-        [Route("GetReportingPerson")]
-        public async Task<IActionResult> GetReportingPerson()
-        {
-            try
-            {
-                var result = repository.GetReportingPerson();
-                return Ok(new
-                {
 
-                    list = result,
-                    ResponseStatus = new ResponseStatus { status = "Success", message = "Reporting Person List", statusCode = StatusCodes.Status200OK }
-                });
-            }
-            catch (Exception ex)
-            {
-                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
-                return BadRequest(new FailureResponse<object>
-                {
-                    Error = ex.Message,
-                    IsreponseSuccess = false
-                });
-            }
-        }
-        #endregion
+
     }
 }
 

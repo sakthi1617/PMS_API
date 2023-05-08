@@ -117,7 +117,6 @@ namespace PMS_API.Services
             designation1.AddTime = DateTime.Now;
             _context.Designations1.Add(designation1);
         }
-
         public void AddTeam(TeamVM team)
         {
             Team _team = new Team();    
@@ -127,7 +126,6 @@ namespace PMS_API.Services
             _context.SaveChanges();
            
         }
-
         public List<Teamlist> GetTeam(int DepartmentID)
         {
             List<Teamlist> teams = new List<Teamlist>();
@@ -143,7 +141,20 @@ namespace PMS_API.Services
                 return teams;
             
         }
+        public List<getDesignation> GetDesignation(int DepartmentID)
+        {
+            List<getDesignation> designation = new List<getDesignation>();
+            var a = _context.Designations1.Where(x => x.DepartmentId == DepartmentID).ToList();
 
+            foreach (var item in a)
+            {
+                getDesignation list = new getDesignation();
+                list.DesignationId = item.DesignationId;
+                list.DesignationName = item.DesignationName;
+                designation.Add(list);
+            }
+            return designation;
+        }
         public string UpdateEmployee(string EmployeeIdentity, EmployeeVM model)
         {
             try
@@ -235,9 +246,7 @@ namespace PMS_API.Services
             {
                 throw ex;
             }
-        }
-
-        
+        }        
         public void EmailDelivery()
         {
             var job_1 = _context.ResponseEmails.Where(x => x.IsActive == true && x.IsDeliverd== false && x.Status== true).FirstOrDefault();
@@ -310,8 +319,7 @@ namespace PMS_API.Services
                 _context.ResponseEmails.Update(job_4);
                 _context.SaveChanges();
             }
-        }
-        
+        }        
         public dynamic EmployeeList()
         {
             List<TestEmployeeList> testlist = new List<TestEmployeeList>();
@@ -420,7 +428,6 @@ namespace PMS_API.Services
             }
             return skills.ToList();
         }
-
         public List<ReportingPerson> GetReportingPerson()
         {
             List<ReportingPerson> testlist = new List<ReportingPerson>();
@@ -436,6 +443,164 @@ namespace PMS_API.Services
                 testlist.Add(reportingPerson);
             }
             return testlist.ToList();
+        }
+        public dynamic EmployeeListByStages(int potential , int performance)
+        {
+            List<TestEmployeeList> testlist = new List<TestEmployeeList>();
+            TestEmployeeVM testemp = new TestEmployeeVM();
+
+            var report1 = _context.EmployeeModules.Where(s => s.IsDeleted == false && s.IsActivated == true && s.PotentialStage == potential && s.PerformanceStage == performance).ToList();
+            // var toplevel = _context.TopManagements.FirstOrDefault(s => s.Id == 1);
+            foreach (var report in report1)
+            {
+                TestEmployeeList test = new TestEmployeeList();
+                var secondmanager = report1.Where(s => s.SecondLevelReportingManager == report.SecondLevelReportingManager).ToList();
+                // EmployeeVM employeeVM = new EmployeeVM();
+                test.FirstLevelReportingManager = report.FirstLevelReportingManager;
+                test.FirstLevelReportingManagerName = _context.EmployeeModules.First(w => w.EmployeeId == report.FirstLevelReportingManager).Name;
+                test.SecondLevelReportingManager = report.SecondLevelReportingManager;
+                test.SecondLevelReportingManagerName = _context.EmployeeModules.First(w => w.EmployeeId == report.SecondLevelReportingManager).Name;
+                testemp = new TestEmployeeVM();
+                testemp.EmployeeId = report.EmployeeId;
+                testemp.Name = report.Name;
+                testemp.Age = report.Age;
+                testemp.DateOfBirth = report.DateOfBirth;
+                testemp.DateOfJoining = report.DateOfJoining;
+                testemp.DepartmentId = report.DepartmentId;
+                testemp.DepartmentName = _context.Departments.First(s => s.DepartmentId == report.DepartmentId).DepartmentName;
+                testemp.DesignationId = report.DesignationId;
+                testemp.DesignationName = _context.Designations.First(s => s.DesignationId == report.DesignationId).DesignationName;
+                testemp.Gender = report.Gender;
+                testemp.MaritalStatus = report.MaritalStatus;
+                testemp.WorkPhoneNumber = report.WorkPhoneNumber;
+                testemp.PersonalEmail = report.PersonalEmail;
+                testemp.PersonalPhone = report.PersonalPhone;
+                testemp.PriviousExperience = report.PriviousExperience;
+                testemp.ProfilePicture = report.ProfilePicture;
+                test.EmployeeVMs = testemp;
+                testlist.Add(test);
+            }
+            return testlist;
+        }
+        public NineStage nineStages()
+        {
+            var ConsistanceStar = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true && x.PerformanceStage == 1 && x.PotentialStage == 1).Count();
+            var FutureStar = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true && x.PerformanceStage == 1 && x.PotentialStage == 2).Count();
+            var RoughDiamond = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true && x.PerformanceStage == 1 && x.PotentialStage == 3).Count();
+            var CurrentStar = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true && x.PerformanceStage == 2 && x.PotentialStage == 1).Count();
+            var KeyPlayer = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true && x.PerformanceStage == 2 && x.PotentialStage == 2).Count();
+            var InconsistentPlayer = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true && x.PerformanceStage == 2 && x.PotentialStage == 3).Count();
+            var HighProfessional = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true && x.PerformanceStage == 3 && x.PotentialStage == 1).Count();
+            var SolidProfessional = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true && x.PerformanceStage == 3 && x.PotentialStage == 2).Count();
+            var TalentRisk = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true && x.PerformanceStage == 3 && x.PotentialStage == 3).Count();
+
+            NineStage nine = new NineStage();
+            nine.ConsistanceStar = ConsistanceStar;
+            nine.FutureStar = FutureStar;
+            nine.RoughDiamond = RoughDiamond;
+            nine.CurrentStar = CurrentStar;
+            nine.KeyPlayer = KeyPlayer;
+            nine.InconsistentPlayer = InconsistentPlayer;
+            nine.HighProfessional = HighProfessional;
+            nine.SolidProfessional = SolidProfessional;
+            nine.TalentRisk = TalentRisk;
+
+            return nine;
+        }
+
+        public void AdminRatingApprove(string EmployeeIdentity, bool approvel)
+        {
+            var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity && x.IsActivated == true && x.IsDeleted != true).FirstOrDefault();
+            if (Id != null)
+            {
+                if (approvel == true)
+                {
+                    Id.IsWantToPublish = true;
+                }
+                else
+                {
+                    Id.IsWantToPublish = false;
+                }
+
+                _context.EmployeeModules.Update(Id);
+                _context.SaveChanges();
+            }
+        }
+        public void AcceptRating(string EmployeeIdentity, bool approvel)
+        {
+            EmployeeModule module = new EmployeeModule();
+            var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity && x.IsActivated == true && x.IsDeleted != true && x.IsWantToPublish == true).FirstOrDefault();
+            if(Id!= null)
+            {
+                if (approvel == true)
+                {
+                    Id.RatingIsaccepted = true;
+                }
+                else
+                {
+                    Id.RatingIsaccepted = false;
+                }
+               
+                _context.EmployeeModules.Update(Id);
+                _context.SaveChanges();
+            }       
+                        
+        }
+        public string SalaryIncrement(string EmployeeIdentity, decimal incrementPercentage)
+        {
+            var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity && x.IsActivated == true && x.IsDeleted != true).FirstOrDefault();
+            if(Id != null)
+            {
+                decimal oldSalary = (decimal)Id.Salary;
+                decimal newSalary = 0;
+
+                var IncrementPercentage = incrementPercentage/ 100;
+                var IncrementAmount = oldSalary * IncrementPercentage;
+                newSalary = oldSalary + IncrementAmount;
+
+                Id.Salary = newSalary;
+                _context.EmployeeModules.Update(Id);    
+                _context.SaveChanges();
+                return "Employee Salary Upadted";
+            }
+            return "Employee Not Found";
+        }
+
+
+        public void annualRatingPublish(bool approvel)
+        {
+            if(approvel == true)
+            {
+                var id = _context.EmployeeModules.Where(x => x.IsDeleted != true && x.IsActivated == true && x.IsWantToPublish == true ).ToList();
+                if(id.Count > 0)
+                {
+                    foreach(var item in id)
+                    {
+                        var allrate = _context.MonthwiseRatings.Where(x => x.EmployeeId== item.EmployeeId && x.CalculatedAt.Value.Year == DateTime.Now.Year).FirstOrDefault();
+                        var msg = " Hi " + item.Name + " Anuual Rating " + DateTime.Now.Year + " Was Published " + "</br>" + " Your 'potential stage = " + item.PotentialStage + "' and Your 'performace stage = " + item.PerformanceStage + "'  Improve your Potential and Performance to Next Level " + "Your Month wise ratings are below : " + "January : " + allrate.January  
+                                                                                                                                                                                                                                                                                                                                                 + "February: " + allrate.February
+                                                                                                                                                                                                                                                                                                                                                 + "March: " + allrate.March
+                                                                                                                                                                                                                                                                                                                                                 + "April: " + allrate.April
+                                                                                                                                                                                                                                                                                                                                                 + "May: " + allrate.May
+                                                                                                                                                                                                                                                                                                                                                 + "June: " + allrate.June
+                                                                                                                                                                                                                                                                                                                                                 + "July: " + allrate.July
+                                                                                                                                                                                                                                                                                                                                                 + "August: " + allrate.August
+                                                                                                                                                                                                                                                                                                                                                 + "September: " + allrate.September
+                                                                                                                                                                                                                                                                                                                                                 + "October: " + allrate.October
+                                                                                                                                                                                                                                                                                                                                                 + "November: " + allrate.November
+                                                                                                                                                                                                                                                                                                                                                 + "December: " + allrate.December;
+                        var message = new Message(new string[] { item.Email }, "Rating Cycle Notification", msg.ToString(), null);
+                        var a = _emailservice.SendEmail(message);
+                        if(a == "ok")
+                        {
+                            item.isPublished= true;
+                            _context.EmployeeModules.Update(item);
+                            _context.SaveChanges();
+                        }
+                    }
+                }
+               
+            }
         }
         public void Save()
         {
@@ -530,15 +695,8 @@ namespace PMS_API.Services
         //    weightage1.Weightage1 = weightage.Weightage1;
         //    _context.Weightages.Add(weightage1);
         //}
+
+        
+         
     }
 }
-
-
-
-
-
-
-
-
-
-

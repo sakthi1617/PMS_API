@@ -25,14 +25,18 @@ namespace PMS_API.Repository
         public List<Designation> DesignationModule();
         public string DeleteEmployee(string EmployeeIdentity); 
         public void EmailDelivery();     
-        public dynamic FindRequiredEmployee(FindEmployee find);  
-      
+        public dynamic FindRequiredEmployee(FindEmployee find);        
         public List<ReportingPerson> GetReportingPerson();
         public void AddTeam(TeamVM team);
-
         public List<Teamlist> GetTeam(int DepartmentID);
-
-         public void Save();
+        public List<getDesignation> GetDesignation(int DepartmentID);
+         public NineStage nineStages();
+        public void AdminRatingApprove(string EmployeeIdentity,bool approvel);
+        public void annualRatingPublish(bool approvel);
+        public void AcceptRating(string Employeeidentity , bool approvel);
+        public dynamic EmployeeListByStages(int potential, int performance);
+        public string SalaryIncrement(string EmployeeIdentity, decimal incrementPercentage);
+        public void Save();
 
         //  public string AddUserLevel(int? designationId, int? departmentId, int? employeeId);
         //  public void AddDesignation(DesignationVM model);
