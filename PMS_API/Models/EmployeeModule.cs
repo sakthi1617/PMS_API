@@ -55,6 +55,10 @@ namespace PMS_API.Models
         public int? PotentialStage { get; set; }
         public int? PerformanceStage { get; set; }
 
+        public bool? IsWantToPublish { get; set; }
+        public bool? RatingIsaccepted { get; set; }
+        public bool? isPublished { get; set; }
+
         public virtual Department? Department { get; set; }
         public virtual Designation? Designation { get; set; }
         public virtual Designation1? DesignationNavigation { get; set; }

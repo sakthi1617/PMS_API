@@ -22,17 +22,23 @@ namespace PMS_API.Services
                 foreach( var skill in weightage.SkillId )
                 {
                     Weightage weightage1 = new Weightage();
-                    weightage1.DepartmentId = weightage.DepartmentId;
-                    weightage1.DesignationId = weightage.DesignationId;
-                    weightage1.TeamId= weightage.TeamId;
-                    weightage1.SkillId = skill;
-                    weightage1.Weightage1 = 0;
-                    _context.Weightages.Add(weightage1);
-                    _context.SaveChanges();
+                    var a = _context.Weightages.Where(x => x.SkillId == skill && x.DesignationId == weightage.DesignationId && x.DepartmentId == weightage.DepartmentId).FirstOrDefault();
+                    if (a == null)
+                    {
+                        weightage1.DepartmentId = weightage.DepartmentId;
+                        weightage1.DesignationId = weightage.DesignationId;
+                        weightage1.TeamId = weightage.TeamId;
+                        weightage1.SkillId = skill;
+                        weightage1.Weightage1 = 0;
+                        _context.Weightages.Add(weightage1);
+                        _context.SaveChanges();
+                       
+                    }
+                   
+                    
                 }
-                
             }
-           
+            
         }
         public void RemoveSkillWeightage(DeleteWeightage weightage)
         {
