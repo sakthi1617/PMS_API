@@ -751,7 +751,7 @@ namespace PMS_API.Controllers
                 repository.AdminRatingApprove(EmployeeIdentity,approvel);
                 return Ok(new
                 {
-                    ResponseStatus = new ResponseStatus { status = "Success", message = "Annual Ratings are Published", statusCode = StatusCodes.Status200OK }
+                    ResponseStatus = new ResponseStatus { status = "Success", message = "Response Updated", statusCode = StatusCodes.Status200OK }
                 });
             }
             catch (Exception ex)
@@ -806,6 +806,80 @@ namespace PMS_API.Controllers
             }
             catch (Exception ex)
             {
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Employeelist who Accept the Annual Rating
+        [HttpGet]
+        [Route("AcceptedEmployeeList")]
+        public async Task<IActionResult> AcceptedEmployeeList()
+        {
+            try
+            {
+
+                var result = repository.AcceptedEmployeeList();
+
+
+                return Ok(new SuccessResponse<object>
+                {
+
+                    ModelData = new
+                    {
+
+                        EMployeeDetails = result
+                    },
+                    statusCode = "200",
+                    Response = "ok"
+
+                });
+            }
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        #endregion
+
+        #region Employeelist who Accept the Annual Rating
+        [HttpGet]
+        [Route("RejectedEmployeeList")]
+        public async Task<IActionResult> RejectedEmployeeList()
+        {
+            try
+            {
+
+                var result = repository.RejectedEmployeeList();
+
+
+                return Ok(new SuccessResponse<object>
+                {
+
+                    ModelData = new
+                    {
+
+                        EMployeeDetails = result
+                    },
+                    statusCode = "200",
+                    Response = "ok"
+
+                });
+            }
+            catch (Exception ex)
+            {
+
                 ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
                 return BadRequest(new FailureResponse<object>
                 {
