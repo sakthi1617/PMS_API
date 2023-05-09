@@ -34,6 +34,8 @@ namespace PMS_API.Repository
         public void AdminRatingApprove(string EmployeeIdentity,bool approvel);
         public void annualRatingPublish(bool approvel);
         public void AcceptRating(string Employeeidentity , bool approvel);
+        public dynamic AcceptedEmployeeList();
+        public dynamic RejectedEmployeeList();
         public dynamic EmployeeListByStages(int potential, int performance);
         public string SalaryIncrement(string EmployeeIdentity, decimal incrementPercentage);
         public void Save();

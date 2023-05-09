@@ -507,7 +507,6 @@ namespace PMS_API.Services
 
             return nine;
         }
-
         public void AdminRatingApprove(string EmployeeIdentity, bool approvel)
         {
             var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity && x.IsActivated == true && x.IsDeleted != true).FirstOrDefault();
@@ -546,6 +545,42 @@ namespace PMS_API.Services
             }       
                         
         }
+        public dynamic AcceptedEmployeeList()
+        {
+            List<SimpleEmployeeListVM> EmpList = new List<SimpleEmployeeListVM>();
+            var a = _context.EmployeeModules.Where(x => x.IsActivated == true && x.IsDeleted != true && x.isPublished == true && x.RatingIsaccepted == true).ToList();
+
+            foreach (var item in a)
+            {
+                SimpleEmployeeListVM list = new SimpleEmployeeListVM();
+                list.EmployeeIdentity = item.EmployeeIdentity;
+                list.Name = item.Name;
+                list.DepartmentId = item.DepartmentId;
+                list.DesignationId = item.DesignationId;
+                list.DesignationId = item.TeamId;
+                list.Email = item.Email;
+                EmpList.Add(list);
+            }
+            return EmpList;
+        }
+        public dynamic RejectedEmployeeList()
+        {
+            List<SimpleEmployeeListVM> EmpList = new List<SimpleEmployeeListVM>();
+            var a = _context.EmployeeModules.Where(x => x.IsActivated == true && x.IsDeleted != true && x.isPublished == true && x.RatingIsaccepted == false).ToList();
+
+            foreach (var item in a)
+            {
+                SimpleEmployeeListVM list = new SimpleEmployeeListVM();
+                list.EmployeeIdentity = item.EmployeeIdentity;
+                list.Name = item.Name;
+                list.DepartmentId = item.DepartmentId;
+                list.DesignationId = item.DesignationId;
+                list.DesignationId = item.TeamId;
+                list.Email = item.Email;
+                EmpList.Add(list);
+            }
+            return EmpList;
+        }
         public string SalaryIncrement(string EmployeeIdentity, decimal incrementPercentage)
         {
             var Id = _context.EmployeeModules.Where(x => x.EmployeeIdentity == EmployeeIdentity && x.IsActivated == true && x.IsDeleted != true).FirstOrDefault();
@@ -565,8 +600,6 @@ namespace PMS_API.Services
             }
             return "Employee Not Found";
         }
-
-
         public void annualRatingPublish(bool approvel)
         {
             if(approvel == true)
