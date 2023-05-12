@@ -31,14 +31,10 @@ namespace PMS_API.Services
                         weightage1.SkillId = skill;
                         weightage1.Weightage1 = 0;
                         _context.Weightages.Add(weightage1);
-                        _context.SaveChanges();
-                       
-                    }
-                   
-                    
+                        _context.SaveChanges();                       
+                    }  
                 }
-            }
-            
+            }            
         }
         public void RemoveSkillWeightage(DeleteWeightage weightage)
         {
@@ -137,13 +133,26 @@ namespace PMS_API.Services
                 throw ex;
             }
         }
+
+        public string DeleteSkill(int id) 
+        {
+            var data = _context.Weightages.Where(x => x.SkillId == id).FirstOrDefault(); 
+            if (data == null)
+            {
+                var s =_context.Skills.Where(x =>x.SkillId == id).FirstOrDefault();
+                _context.Skills.Remove(s);
+                _context.SaveChanges();
+                return "success";
+            }
+            return "error";
+        }
         public List<Skill> SkilsList()
         {
             return _context.Skills.ToList();
         }
-        public List<Weightage> SkillbyDepartmentID(int DeptId , int DesigId)
+        public List<Weightage> SkillbyDepartmentID(int DeptId , int DesigId , int teamid)
         {
-            return _context.Weightages.Where(x => x.DepartmentId == DeptId && x.DesignationId == DesigId).ToList();
+            return _context.Weightages.Where(x => x.DepartmentId == DeptId && x.DesignationId == DesigId && x.TeamId == teamid).ToList();
         }
         public string UpdateSkillWeightages(int skillId, string employeeIdentity, int weightage)
         {
