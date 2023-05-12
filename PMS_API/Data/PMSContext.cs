@@ -58,6 +58,7 @@ namespace PMS_API.Data
         public virtual DbSet<DelayedGoal> DelayedGoals { get; set; } = null!;
         public virtual DbSet<Team> Teams { get; set; } = null!;
         public virtual DbSet<MonthwiseRating> MonthwiseRatings { get; set; } = null!;
+        public virtual DbSet<QuestionBank> QuestionBanks { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -682,6 +683,35 @@ namespace PMS_API.Data
                 entity.Property(e => e.OverallRating).HasColumnType("decimal(18, 2)");
 
                 entity.Property(e => e.September).HasColumnType("decimal(18, 2)");
+            });
+
+            modelBuilder.Entity<QuestionBank>(entity =>
+            {
+                entity.HasKey(e => e.QuestionId)
+                    .HasName("PK__Question__0DC06F8C1ED405DB");
+
+                entity.ToTable("QuestionBank");
+
+                entity.Property(e => e.QuestionId).HasColumnName("QuestionID");
+
+                entity.Property(e => e.CorrectOption).HasColumnName("Correct_option");
+
+                entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.OptionA).HasColumnName("Option_A");
+
+                entity.Property(e => e.OptionB).HasColumnName("Option_B");
+
+                entity.Property(e => e.OptionC).HasColumnName("Option_C");
+
+                entity.Property(e => e.OptionD).HasColumnName("Option_D");
+
+                entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Skill)
+                    .WithMany(p => p.QuestionBanks)
+                    .HasForeignKey(d => d.SkillId)
+                    .HasConstraintName("FK__QuestionB__Skill__02C769E9");
             });
 
             modelBuilder.Entity<Team>(entity =>
