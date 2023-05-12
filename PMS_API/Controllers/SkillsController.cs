@@ -52,6 +52,7 @@ namespace PMS_API.Controllers
 
         #region Remove SkillWeightage
         [HttpDelete]
+        [Route("RemoveSkillWeightage")]
         public async Task<IActionResult> RemoveSkillWeightage(DeleteWeightage weightage)
         {
             try
@@ -225,6 +226,30 @@ namespace PMS_API.Controllers
         }
         #endregion
 
+        #region Delete skills
+        [HttpDelete]
+        [Route("DeleteSkill")]
+        public async Task<IActionResult> DeleteSkill(int skillId)
+        {
+            if(ModelState.IsValid)
+            {
+                var a = repository.DeleteSkill(skillId);
+                switch (a)
+                {
+                    case "success":
+                        return StatusCode(StatusCodes.Status202Accepted,
+                                new ResponseStatus { status = "Success", message = "Skill Deleted SuccessFully", statusCode = StatusCodes.Status202Accepted });
+                    case "error":
+                        return StatusCode(StatusCodes.Status400BadRequest,
+                                new ResponseStatus { status = "Error", message = "You Can't delete this skill because it was assigned for some employees", statusCode = StatusCodes.Status400BadRequest });
+                }
+
+            }
+            return StatusCode(StatusCodes.Status400BadRequest,
+                                new ResponseStatus { status = "Success", message = "Invalid data", statusCode = StatusCodes.Status400BadRequest });
+        }
+        #endregion
+
         #region Listing Skill which was access by all
         [HttpGet]
         [Route("SkillsModule")]
@@ -257,11 +282,11 @@ namespace PMS_API.Controllers
         [HttpGet]
         [Route("SkillbyDepartmentID")]
         [Authorize(Roles = "Admin,User")]
-        public async Task<IActionResult> SkillbyDepartmentID(int DeptId , int DesigId)
+        public async Task<IActionResult> SkillbyDepartmentID(int DeptId , int DesigId , int teamid)
         {
             try
             {
-                var skillbydeptid = repository.SkillbyDepartmentID(DeptId, DesigId).ToList();
+                var skillbydeptid = repository.SkillbyDepartmentID(DeptId, DesigId,teamid).ToList();
                 return Ok(new
                 {
 
