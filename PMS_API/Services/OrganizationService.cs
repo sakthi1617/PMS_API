@@ -56,6 +56,7 @@ namespace PMS_API.Services
                 module.IsDeleted = false;
                 module.IsActivated = false;
                 module.Salary = model.Salary;
+                if(model.TeamId != 0)
                 module.TeamId = model.TeamId;
 
                _context.EmployeeModules.Add(module);    
@@ -111,11 +112,11 @@ namespace PMS_API.Services
         } 
         public void AddDesignations(Designation1VM model)
         {
-            Designation1 designation1 = new Designation1();
+            Designation designation1 = new Designation();
             designation1.DepartmentId= model.DepartmentId;
             designation1.DesignationName= model.DesignationName;
             designation1.AddTime = DateTime.Now;
-            _context.Designations1.Add(designation1);
+            _context.Designations.Add(designation1);
         }
         public void AddTeam(TeamVM team)
         {
@@ -134,7 +135,7 @@ namespace PMS_API.Services
                 foreach(var item in a)
                 {
                     Teamlist list = new Teamlist();
-                    list.TeamId= item.DepartmentId;
+                    list.TeamId= item.TeamId;
                     list.TeamName= item.TeamName;
                     teams.Add(list);
                 }
@@ -144,7 +145,7 @@ namespace PMS_API.Services
         public List<getDesignation> GetDesignation(int DepartmentID)
         {
             List<getDesignation> designation = new List<getDesignation>();
-            var a = _context.Designations1.Where(x => x.DepartmentId == DepartmentID).ToList();
+            var a = _context.Designations.Where(x => x.DepartmentId == DepartmentID).ToList();
 
             foreach (var item in a)
             {
@@ -258,7 +259,7 @@ namespace PMS_API.Services
             {
                 var userlvl = _context.UserLevels.Where(x => x.EmployeeId == job_1.EmployeeId && x.SkillId == job_1.Skillid).FirstOrDefault();
                 var msg = "(Req_ID " + job_1.ResponseId + ".)" + " " + "</br>" + "Hi " + job_1.FirstLvlManagerName + " Your Update Request(" + job_1.ReqId + ") has Approved";
-                var message = new Message(new string[] { job_1.FirstlvlManagerMail }, "Approval Message", msg.ToString(),null);
+                var message = new Message(new string[] { job_1.FirstlvlManagerMail }, "Approval Message", msg.ToString(),null,null);
                 var a = _emailservice.SendEmail(message);
                 if( a == "ok")
                 {
@@ -286,7 +287,7 @@ namespace PMS_API.Services
             if(job_2 != null)
             {
                 var msg = "(Req_ID " + job_2.ResponseId + ".)" + " " + "</br>" + "Hi " + job_2.FirstLvlManagerName + " Your Update Request(" + job_2.ReqId + ") has been Rejected for some Reason";
-                var message = new Message(new string[] { job_2.FirstlvlManagerMail }, "Approval Message", msg.ToString(), null);
+                var message = new Message(new string[] { job_2.FirstlvlManagerMail }, "Approval Message", msg.ToString(), null,null);
                 var a = _emailservice.SendEmail(message);
                 if(a == "ok")
                 { 
@@ -301,7 +302,7 @@ namespace PMS_API.Services
             if(job_3 != null)
             {
                 var msg = " Hi " + job_3.Employeename + " Your Skill Level in " + job_3.SkillName + " To The Next Level By " + job_3.FirstLvlManagerName;
-                var message = new Message(new string[] { job_3.Employeemail }, "Skill Updated", msg.ToString(), null);
+                var message = new Message(new string[] { job_3.Employeemail }, "Skill Updated", msg.ToString(), null,null);
                 var a = _emailservice.SendEmail(message);
                 if (a == "ok")
                 {
@@ -548,7 +549,7 @@ namespace PMS_API.Services
         public dynamic AcceptedEmployeeList()
         {
             List<SimpleEmployeeListVM> EmpList = new List<SimpleEmployeeListVM>();
-            var a = _context.EmployeeModules.Where(x => x.IsActivated == true && x.IsDeleted != true && x.isPublished == true && x.RatingIsaccepted == true).ToList();
+            var a = _context.EmployeeModules.Where(x => x.IsActivated == true && x.IsDeleted != true && x.IsPublished == true && x.RatingIsaccepted == true).ToList();
 
             foreach (var item in a)
             {
@@ -566,7 +567,7 @@ namespace PMS_API.Services
         public dynamic RejectedEmployeeList()
         {
             List<SimpleEmployeeListVM> EmpList = new List<SimpleEmployeeListVM>();
-            var a = _context.EmployeeModules.Where(x => x.IsActivated == true && x.IsDeleted != true && x.isPublished == true && x.RatingIsaccepted == false).ToList();
+            var a = _context.EmployeeModules.Where(x => x.IsActivated == true && x.IsDeleted != true && x.IsPublished == true && x.RatingIsaccepted == false).ToList();
 
             foreach (var item in a)
             {
@@ -622,11 +623,11 @@ namespace PMS_API.Services
                                                                                                                                                                                                                                                                                                                                                  + "October: " + allrate.October
                                                                                                                                                                                                                                                                                                                                                  + "November: " + allrate.November
                                                                                                                                                                                                                                                                                                                                                  + "December: " + allrate.December;
-                        var message = new Message(new string[] { item.Email }, "Rating Cycle Notification", msg.ToString(), null);
+                        var message = new Message(new string[] { item.Email }, "Rating Cycle Notification", msg.ToString(), null,null);
                         var a = _emailservice.SendEmail(message);
                         if(a == "ok")
                         {
-                            item.isPublished= true;
+                            item.IsPublished = true;
                             _context.EmployeeModules.Update(item);
                             _context.SaveChanges();
                         }
