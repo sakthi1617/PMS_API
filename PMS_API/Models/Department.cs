@@ -11,7 +11,7 @@ namespace PMS_API.Models
         {
             EmployeeModules = new HashSet<EmployeeModule>();
             Weightages = new HashSet<Weightage>();
-            Designation1s = new HashSet<Designation1>();
+            Designations = new HashSet<Designation>();
             Teams = new HashSet<Team>();
            
         }
@@ -25,7 +25,7 @@ namespace PMS_API.Models
 
         public virtual ICollection<EmployeeModule> EmployeeModules { get; set; }
         public virtual ICollection<Weightage> Weightages { get; set; }
-        public virtual ICollection<Designation1> Designation1s { get; set; }
+        public virtual ICollection<Designation> Designations { get; set; }
         public virtual ICollection<Team> Teams { get; set; }
       
     }

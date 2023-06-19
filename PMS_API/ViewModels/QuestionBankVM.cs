@@ -1,4 +1,6 @@
-﻿namespace PMS_API.ViewModels
+﻿using PMS_API.Models;
+
+namespace PMS_API.ViewModels
 {
     public class QuestionBankVM
     {
@@ -9,6 +11,13 @@
         public string? OptionC { get; set; }
         public string? OptionD { get; set; }
         public string? CorrectOption { get; set; }
-        public string? QuestionLevel { get; set; }
+        public int? QuestionLevel { get; set; }
+        public int? QuestionType { get; set; }
+
+        public int? SkillLevel { get; set; }
+        public int? Marks { get; set; }
+
     }
 }
+
+

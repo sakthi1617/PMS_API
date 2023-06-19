@@ -14,6 +14,7 @@ using PMS_API.ViewModels;
 using PMS_API.Models;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Mail;
 
 namespace PMS_API.Services
 {
@@ -136,9 +137,9 @@ namespace PMS_API.Services
             
             //var files =  new FormFileCollection();
             var msg = " Hi " + data.Name + " This Is a Friendly reminder that the Goals has been assigned to you . if you have any question , please don't hesitate to approch.";
-            var message = new Message(new string[] { data.Email }, "Notification of goal submission", msg.ToString(), null);
+            var message = new Message(new string[] { data.Email }, "Notification of goal submission", msg.ToString(), null,null);
 
-            emailService.SendEmail(message);
+            emailService.SendEmail(message );
             return "ok";
         }
         public string EmployeeGoalReview(EmployeeReviewVM model)
@@ -170,48 +171,48 @@ namespace PMS_API.Services
                 review.CreatedOn = DateTime.Now;    
                 _context.EmployeeGoalReviews.Add(review);
                 _context.SaveChanges();
-               
 
 
-                //int a = review.EmpReviewId;
-                //if (model.Attachment != null)
-                //{
-                //    if (model.Attachment.Count > 0)
-                //    {
-                //        foreach (var attach in model.Attachment)
-                //        {
-                //            EmployeeAttachment attachment = new EmployeeAttachment();
-                //            IFormFile file = attach;
 
-                //            long length = file.Length;
+                int a = review.EmpReviewId;
+                if (model.Attachment != null)
+                {
+                    if (model.Attachment.Count > 0)
+                    {
+                        foreach (var attach in model.Attachment)
+                        {
+                            EmployeeAttachment attachment = new EmployeeAttachment();
+                            IFormFile file = attach;
+
+                            long length = file.Length;
 
 
-                //            using var fileStream = file.OpenReadStream();
-                //            byte[] bytes = new byte[length];
-                //            fileStream.Read(bytes, 0, (int)file.Length);
+                            using var fileStream = file.OpenReadStream();
+                            byte[] bytes = new byte[length];
+                            fileStream.Read(bytes, 0, (int)file.Length);
 
-                //            attachment.Attachment = bytes.ToArray();
-                //            attachment.EmpReviewId = a;
-                //            attachment.IsActive = true;
-                //            attachment.IsDeleted = false;
-                //            attachment.CreatedOn = DateTime.Now;
-                //            _context.EmployeeAttachments.Add(attachment);
-                //            _context.SaveChanges();
+                            attachment.Attachment = bytes.ToArray();
+                            attachment.EmpReviewId = a;
+                            attachment.IsActive = true;
+                            attachment.IsDeleted = false;
+                            attachment.CreatedOn = DateTime.Now;
+                            _context.EmployeeAttachments.Add(attachment);
+                            _context.SaveChanges();
 
-                //        }
+                        }
 
-                //    }
-                //}
+                    }
+                }
 
                 var data = _context.EmployeeModules.Where(x => x.EmployeeId == Id.EmployeeId).FirstOrDefault();
                 var mandata = _context.EmployeeModules.Where( x=> x.EmployeeId == gole.AssingedManagerId).FirstOrDefault(); 
                
                 var msg = " Hi " + gole.Assignedby + " " + data.Name + " has Submitted her Goal Review at " + review.CreatedOn + " So Kindly check this before Appraisal Time Period";
-                var message = new Message(new string[] { mandata.Email }, "Notification of goal review submission", msg.ToString(), null);
+                var message = new Message(new string[] { mandata.Email }, "Notification of goal review submission", msg.ToString(), null,null);
 
-              var a =  emailService.SendEmail(message);
+              var abc =  emailService.SendEmail(message);
 
-                if(a == "ok")
+                if(abc == "ok")
                 {
                     gole.IsSubmitted = true;
                     gole.IsReviewNotified = true;
@@ -321,7 +322,7 @@ namespace PMS_API.Services
                 var Empl = _context.EmployeeModules.Where(x => x.EmployeeId == Id.FirstLevelReportingManager).FirstOrDefault();
 
                 var msg = " Hi " + Empl.Name + " " + " Please Extend my Review Time " +""+ "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
-                var message = new Message(new string[] { Empl.Email }, "Notification of Review Extention Permission", msg.ToString(), null);
+                var message = new Message(new string[] { Empl.Email }, "Notification of Review Extention Permission", msg.ToString(), null,null);
 
                 var a = emailService.SendEmail(message);
                 if(a == "ok")
@@ -354,7 +355,7 @@ namespace PMS_API.Services
                 }
                 
                 var msg = " Hi " + manager.Name + " " + " Please Extend my Review Time " + "" + "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
-                var message = new Message(new string[] { manager.Email }, "Notification of Review Extention Permission", msg.ToString(), null);
+                var message = new Message(new string[] { manager.Email }, "Notification of Review Extention Permission", msg.ToString(), null,null);
                 
 
                 var a = emailService.SendEmail(message);
@@ -383,7 +384,7 @@ namespace PMS_API.Services
                     goaldetail.IsEmpExtentionApprovedAt = DateTime.Now;
                     _context.GoalModules.Update(goaldetail);
                     var msg = " Hi " + empemil.Name + " " + " Your Review Extension Time is Approved For next 24Hours So Kindly Complete Your Goal Reviews within That Time Duration ";
-                    var message = new Message(new string[] {empemil.Email}, "Notification of Review Extention Permission", msg.ToString(), null);
+                    var message = new Message(new string[] {empemil.Email}, "Notification of Review Extention Permission", msg.ToString(), null,null);
 
                     var a = emailService.SendEmail(message);
                     if(a == "ok")
@@ -418,7 +419,7 @@ namespace PMS_API.Services
                     goaldetail.IsManagerExtentionApprovedAt = DateTime.Now;
                     _context.GoalModules.Update(goaldetail);
                     var msg = " Hi " + managermail.Name + " " + " Your Review Extension Time is Approved For next 24Hours So Kindly Colmpelte Your Goal Reviews within That Time Duration " + "" ;
-                    var message = new Message(new string[] {managermail.Email}, "Notification of Review Extention Permission", msg.ToString(), null);
+                    var message = new Message(new string[] {managermail.Email}, "Notification of Review Extention Permission", msg.ToString(), null,null);
 
                     var a = emailService.SendEmail(message);
                     if(a == "ok")
@@ -851,7 +852,7 @@ namespace PMS_API.Services
             if(Job != null)
             {
                 var msg = " Hi " + admin.Name + "," + " " + Job.Assignedby + "Assigned privious month goal for " + Job.EmployeeId + "In this Month" + " " + "</br>" + Job.DelayedGoalId;
-                var message = new Message(new string[] { admin.Email }, "Notification For Delayed Goals", msg.ToString(), null);
+                var message = new Message(new string[] { admin.Email }, "Notification For Delayed Goals", msg.ToString(), null,null);
                 var a = emailService.SendEmail(message);
                 if (a == "ok")
                 {
