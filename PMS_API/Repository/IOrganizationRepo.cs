@@ -11,6 +11,7 @@ namespace PMS_API.Repository
     {
         public int? AddEmployee(EmployeeVM model);       
         public string AddUserLevel(int? employeeId, int? DepartmentId,int? DesignationId, int? TeamId);
+        public void AccountActivateEmail(int employeeCreationResult, EmployeeVM employeeModule);
         public void AddDepartment(DepartmentVM model);   
         public void AddDesignations(Designation1VM model);    
         public string UpdateEmployee(string EmployeeIdentity, EmployeeVM model);
