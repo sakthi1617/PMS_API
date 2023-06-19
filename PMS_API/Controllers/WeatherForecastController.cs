@@ -28,7 +28,7 @@ namespace PMS_API.Controllers
 
             var files = Request.Form.Files.Any() ? Request.Form.Files : new FormFileCollection();
             
-            var message = new Message(new string[] { "hearthin2@gmail.com" }, "Test mail with Attachments", "This is the content from our mail with attachments.", files);
+            var message = new Message(new string[] { "hearthin2@gmail.com" }, "Test mail with Attachments", "This is the content from our mail with attachments.", files,null);
              _emailService.SendEmail(message);
 
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast

@@ -18,12 +18,12 @@ namespace PMS_API.Models
         public decimal? GoalRating { get; set; }
         public bool? IsActive { get; set; }
         public bool? IsDeleted { get; set; }
-        public bool? IsCalculated { get; set; }
         public DateTime? CreatedOn { get; set; }
         public DateTime? ModifiedOn { get; set; }
         public int? EmpReviewId { get; set; }
+        public bool? IsCalculated { get; set; }
 
-        public virtual ManagersTbl? AssingedManager { get; set; }
+        public virtual EmployeeModule? AssingedManager { get; set; }
         public virtual EmployeeGoalReview? EmpReview { get; set; }
         public virtual EmployeeModule? Employee { get; set; }
         public virtual GoalModule? Goal { get; set; }

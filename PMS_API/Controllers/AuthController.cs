@@ -189,7 +189,7 @@ namespace PMS_API.Controllers
                 {
                     var files = Request.Form.Files.Any() ? Request.Form.Files : new FormFileCollection();
                     var msg = " Hi " + user.Name + " Generate your new password, please click the following link: https://localhost:7099/api/OrganizationAuth/ResetPassword?Email= " + user.Email;
-                    var message = new Message(new string[] { user.Email }, "Forget Password", msg.ToString(), files);
+                    var message = new Message(new string[] { user.Email }, "Forget Password", msg.ToString(), files,null);
                     _emailservice.SendEmail(message);
                 }
                 return StatusCode(StatusCodes.Status200OK, new ResponseStatus { status = "Success", message = "Forget Password Link Send on Your Mail.", statusCode = StatusCodes.Status200OK });

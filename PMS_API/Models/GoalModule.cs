@@ -2,7 +2,7 @@
 
 namespace PMS_API.Models
 {
-    public class GoalModule
+    public partial class GoalModule
     {
         public GoalModule()
         {
@@ -39,7 +39,7 @@ namespace PMS_API.Models
         public DateTime? IsManagerExtentionApprovedAt { get; set; }
         public bool? IsIgnored { get; set; }
 
-        public virtual ManagersTbl? AssingedManager { get; set; }
+        public virtual EmployeeModule? AssingedManager { get; set; }
         public virtual EmployeeModule? Employee { get; set; }
         public virtual ICollection<EmployeeGoalReview> EmployeeGoalReviews { get; set; }
         public virtual ICollection<ManagerGoalReview> ManagerGoalReviews { get; set; }

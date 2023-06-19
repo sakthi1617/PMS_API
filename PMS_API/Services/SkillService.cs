@@ -199,7 +199,7 @@ namespace PMS_API.Services
                 _context.SaveChanges();
 
                 var msg = "(Req_ID " + request.ReqId + ".)" + " " + "</br>" + "Hi " + second.Name + " I Would Like To Improve " + Id.Name + "'s SkillLevel to Next Level For " + "Reason:" + "</br>" + "<h3>" + rea + "Descriptions:" + "</br>" + "<h3>" + "  " + descrip + " Kindly Approve This" + "</br>" + "<button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Confirm</button></br><button type=\"button\" class=\"btn btn-success\" style=\"width:75px;height:50px;font-size:20px\">Reject</button>";
-                var message = new Message(new string[] { second.Email }, "Requst For Level Update", msg.ToString(), fiels);
+                var message = new Message(new string[] { second.Email }, "Requst For Level Update", msg.ToString(), fiels,null);
                 var a = _emailservice.SendEmail(message);
 
                 if (a == "ok")
