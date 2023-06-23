@@ -15,26 +15,53 @@ namespace PMS_API.Services
             _context = context;
             _emailservice = emailService;
         }
-        public void AddSkillWeightage(WeightageVM weightage)
+        public string AddSkillWeightage(WeightageVM weightage)
         {
-            if(weightage.SkillId.Count >0)
+            //if(weightage.SkillId.Count >0)
+            //{
+            //    foreach( var skill in weightage.SkillId )
+            //    {
+            //        Weightage weightage1 = new Weightage();
+            //        var a = _context.Weightages.Where(x => x.SkillId == skill && x.DesignationId == weightage.DesignationId && x.DepartmentId == weightage.DepartmentId).FirstOrDefault();
+            //        if (a == null)
+            //        {
+            //            weightage1.DepartmentId = weightage.DepartmentId;
+            //            weightage1.DesignationId = weightage.DesignationId;
+            //            weightage1.TeamId = weightage.TeamId;
+            //            weightage1.SkillId = skill;
+            //            weightage1.Weightage1 = 0;
+            //            _context.Weightages.Add(weightage1);
+            //            _context.SaveChanges();                       
+            //        }  
+            //    }
+            //}
+            //
+
+            if (weightage.SkillId != null)
             {
-                foreach( var skill in weightage.SkillId )
+                Weightage weightage1 = new Weightage();
+                var a = _context.Weightages.Where(x => x.SkillId == weightage.SkillId &&
+                                                  x.DesignationId == weightage.DesignationId && 
+                                                  x.DepartmentId == weightage.DepartmentId && 
+                                                  x.TeamId == weightage.TeamId).FirstOrDefault();
+                if(a != null)
                 {
-                    Weightage weightage1 = new Weightage();
-                    var a = _context.Weightages.Where(x => x.SkillId == skill && x.DesignationId == weightage.DesignationId && x.DepartmentId == weightage.DepartmentId).FirstOrDefault();
-                    if (a == null)
-                    {
-                        weightage1.DepartmentId = weightage.DepartmentId;
-                        weightage1.DesignationId = weightage.DesignationId;
-                        weightage1.TeamId = weightage.TeamId;
-                        weightage1.SkillId = skill;
-                        weightage1.Weightage1 = 0;
-                        _context.Weightages.Add(weightage1);
-                        _context.SaveChanges();                       
-                    }  
+                    return "Already Exists";
                 }
-            }            
+                else
+                {
+                    weightage1.DepartmentId = weightage.DepartmentId;
+                    weightage1.DesignationId = weightage.DesignationId;
+                    weightage1.TeamId = weightage.TeamId;
+                    weightage1.SkillId = weightage.SkillId;
+                    weightage1.Weightage1 = 0;
+                    _context.Weightages.Add(weightage1);
+                    _context.SaveChanges();
+                    return "Success";
+
+                }
+            }
+            return "invalid Datas";
         }
         public void RemoveSkillWeightage(DeleteWeightage weightage)
         {
@@ -106,11 +133,22 @@ namespace PMS_API.Services
             return join;
 
         }
-        public void AddSkill(SkillsVM model)
+        public string AddSkill(SkillsVM model)
         {
             Skill skill = new Skill();
-            skill.SkillName = model.SkillName;
-            _context.Skills.Add(skill);
+            var data = _context.Skills.Where(x => x.SkillName.ToUpper().Replace(" ", string.Empty) == model.SkillName.ToUpper().Replace(" ", string.Empty)).FirstOrDefault();
+            if(data != null)
+            {
+                return "skill already exists";
+            }
+            else
+            {
+                skill.SkillName = model.SkillName;
+                _context.Skills.Add(skill);
+                _context.SaveChanges();
+                return "success";
+            }
+            
         }
         public string UpdateSkill(int id, SkillsVM skills)
         {
@@ -119,9 +157,18 @@ namespace PMS_API.Services
                 var skill = _context.Skills.Where(s => s.SkillId == id).FirstOrDefault();
                 if (skill != null)
                 {
-                    skill.SkillName = skills.SkillName;
-                    _context.Skills.Update(skill);
-                    return "Updated";
+                    if(skill.SkillName.ToUpper().Replace(" ", string.Empty) == skills.SkillName.ToUpper().Replace(" ", string.Empty))
+                    {
+                        return "This Skill is Already Exists";
+                    }
+                    else
+                    {
+                        skill.SkillName = skills.SkillName;
+                        _context.Skills.Update(skill);
+                        _context.SaveChanges();
+                        return "Updated";
+                    }
+                   
                 }
                 else
                 {
@@ -150,9 +197,9 @@ namespace PMS_API.Services
         {
             return _context.Skills.ToList();
         }
-        public List<Weightage> SkillbyDepartmentID(int DeptId , int DesigId , int teamid)
+        public List<Weightage> SkillbyDepartmentID(int DepartmentId, int DesignationId, int Teamid)
         {
-            return _context.Weightages.Where(x => x.DepartmentId == DeptId && x.DesignationId == DesigId && x.TeamId == teamid).ToList();
+            return _context.Weightages.Where(x => x.DepartmentId == DepartmentId && x.DesignationId == DesignationId && x.TeamId == Teamid).ToList();
         }
         public string UpdateSkillWeightages(int skillId, string employeeIdentity, int weightage)
         {

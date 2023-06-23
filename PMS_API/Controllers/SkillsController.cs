@@ -31,9 +31,23 @@ namespace PMS_API.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    repository.AddSkillWeightage(weightage);
-                    return StatusCode(StatusCodes.Status201Created,
+                    var a =repository.AddSkillWeightage(weightage);
+
+                    switch (a)
+                    {
+                        case "Success":
+                            return StatusCode(StatusCodes.Status201Created,
                          new ResponseStatus { status = "Success", message = "Weightage Added Successfully.", statusCode = StatusCodes.Status201Created });
+                        case "Already Exists":
+                            return StatusCode(StatusCodes.Status201Created,
+                         new ResponseStatus { status = "Error", message = "Weightage already Exsist.", statusCode = StatusCodes.Status201Created });
+                        case "invalid Datas":
+                            return StatusCode(StatusCodes.Status400BadRequest,
+                        new ResponseStatus { status = "Error", message = "Invalid Data.", statusCode = StatusCodes.Status400BadRequest });
+
+                    }
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                         new ResponseStatus { status = "Success", message = "Somthing Went Wrong Please Try Again Later", statusCode = StatusCodes.Status400BadRequest });
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
                         new ResponseStatus { status = "Error", message = "Invalid Data.", statusCode = StatusCodes.Status400BadRequest });
@@ -165,10 +179,21 @@ namespace PMS_API.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    repository.AddSkill(skill);
-                    repository.Save();
-                    return StatusCode(StatusCodes.Status201Created,
-                        new ResponseStatus { status = "Success", message = "Skill Added Successfully", statusCode = StatusCodes.Status201Created });
+                   var a =  repository.AddSkill(skill);
+
+                    switch (a)
+                    {
+                        case "success":
+                            return StatusCode(StatusCodes.Status201Created,
+                       new ResponseStatus { status = "Success", message = "Skill Added Successfully", statusCode = StatusCodes.Status201Created });
+
+                        case "skill already exists":
+                            return StatusCode(StatusCodes.Status400BadRequest,
+                       new ResponseStatus { status = "Error", message = "Skill Already Exists", statusCode = StatusCodes.Status400BadRequest });
+                    }
+                    
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                        new ResponseStatus { status = "Error", message = "Somthing went Wrong please try again Later", statusCode = StatusCodes.Status400BadRequest });
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,
                    new ResponseStatus { status = "Error", message = "Invalid Datas", statusCode = StatusCodes.Status400BadRequest });
@@ -200,14 +225,17 @@ namespace PMS_API.Controllers
                     switch (a)
                     {
                         case "Updated":
-                            repository.Save();
+                           
                             return StatusCode(StatusCodes.Status201Created,
                                 new ResponseStatus { status = "Success", message = "Skill Updated SuccessFully", statusCode = StatusCodes.Status201Created });
 
-                        case "Designation Not Exists":
+                        case "Skill Not Exists":
 
                             return StatusCode(StatusCodes.Status404NotFound,
                                 new ResponseStatus { status = "Error", message = "Skill Not Exists", statusCode = StatusCodes.Status404NotFound });
+                        case "This Skill is Already Exists":
+                            return StatusCode(StatusCodes.Status400BadRequest,
+                                  new ResponseStatus { status = "Error", message = "This Skill is Already Exists", statusCode = StatusCodes.Status400BadRequest });
                     }
                 }
                 return StatusCode(StatusCodes.Status400BadRequest,

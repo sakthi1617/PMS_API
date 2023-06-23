@@ -120,7 +120,7 @@ namespace PMS_API.Controllers
         #region GeneratePassword
         [HttpPost]
         [Route("GeneratetPassword")]
-        public async Task<IActionResult> GeneratePassword(string Email, ResetPassword request)
+        public async Task<IActionResult> GeneratePassword( ResetPassword request)
         {
             try
             {
