@@ -5,15 +5,15 @@ namespace PMS_API.Repository
 {
     public interface ISkillRepo
     {
-        public void AddSkillWeightage(WeightageVM weightage);
+        public string AddSkillWeightage(WeightageVM weightage);
         public void RemoveSkillWeightage(DeleteWeightage weightage);
         public string AddAdditionalSkills(UserLevelVM level);
         public IQueryable<GetEmployeeSkillsByIdVM> GetEmployeeSkillsById(string EmployeeIdentity);
-        public void AddSkill(SkillsVM model);
+        public string AddSkill(SkillsVM model);
         public string UpdateSkill(int id, SkillsVM skill);
         public string DeleteSkill(int id);
         public List<Skill> SkilsList();
-        public List<Weightage> SkillbyDepartmentID(int DeptId , int DesigId , int teamid);
+        public List<Weightage> SkillbyDepartmentID(int DepartmentId , int DesignationId , int Teamid);
         public string UpdateSkillWeightages(int skillId, string employeeIdentity, int weightage);
         public dynamic ReqForUpdateLvl(string employeeIdentity, int SklID, string descrip, string rea, IFormFileCollection fiels);
         public string LevlelApprovedSuccess(int reqid, bool status); 
