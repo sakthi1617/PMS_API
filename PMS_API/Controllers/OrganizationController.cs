@@ -388,6 +388,7 @@ namespace PMS_API.Controllers
         //    }
         //} 
         #endregion
+
         public async Task<IActionResult> EmployeeModule()
         {
             try
@@ -421,11 +422,12 @@ namespace PMS_API.Controllers
             }
         }
         #endregion
+        #region InactiveEmployeeList
         [HttpGet]
         [Route("InactiveEmployeeList")]
         public async Task<IActionResult> InactiveEmployeeList()
         {
-            try
+              try
             {
 
                 var result = repository.InactiveEmployeeList();
@@ -455,6 +457,7 @@ namespace PMS_API.Controllers
                 });
             }
         }
+        #endregion
         [HttpGet]
         [Route("EmployeesinNoticePeriod")]
         public async Task<IActionResult> EmployeesinNoticePeriod()
