@@ -61,6 +61,9 @@ namespace PMS_API.Models
         public bool? IsWantToPublish { get; set; }
         public bool? RatingIsaccepted { get; set; }
         public bool? IsPublished { get; set; }
+        public bool? InNoticePeriod { get; set; }
+        public bool? IsResigned { get; set; }
+        public DateTime? ResingnedAt { get; set; }
 
         public virtual Department? Department { get; set; }
         public virtual Designation? Designation { get; set; }

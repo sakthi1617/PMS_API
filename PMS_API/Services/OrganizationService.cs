@@ -366,6 +366,125 @@ namespace PMS_API.Services
             }
             return testlist;
         }
+
+        public dynamic InactiveEmployeeList()
+        {
+            List<TestEmployeeList> testlist = new List<TestEmployeeList>();
+            TestEmployeeVM testemp = new TestEmployeeVM();
+
+            var report1 = _context.EmployeeModules.Where(s => s.IsDeleted == false && s.IsActivated != true).ToList();
+          
+            foreach (var report in report1)
+            {
+                TestEmployeeList test = new TestEmployeeList();
+                var secondmanager = report1.Where(s => s.SecondLevelReportingManager == report.SecondLevelReportingManager).ToList();
+                test.FirstLevelReportingManager = report.FirstLevelReportingManager;
+                test.FirstLevelReportingManagerName = _context.EmployeeModules.First(w => w.EmployeeId == report.FirstLevelReportingManager).Name;
+                test.SecondLevelReportingManager = report.SecondLevelReportingManager;
+                test.SecondLevelReportingManagerName = _context.EmployeeModules.First(w => w.EmployeeId == report.SecondLevelReportingManager).Name;
+                testemp = new TestEmployeeVM();
+                testemp.EmployeeId = report.EmployeeId;
+                testemp.Name = report.Name;
+                testemp.Age = report.Age;
+                testemp.RoleId= report.RoleId;
+                testemp.DateOfBirth = report.DateOfBirth;
+                testemp.DateOfJoining = report.DateOfJoining;
+                testemp.DepartmentId = report.DepartmentId;
+                testemp.DepartmentName = _context.Departments.First(s => s.DepartmentId == report.DepartmentId).DepartmentName;
+                testemp.DesignationId = report.DesignationId;
+                testemp.DesignationName = _context.Designations.First(s => s.DesignationId == report.DesignationId).DesignationName;
+                testemp.Gender = report.Gender;
+                testemp.MaritalStatus = report.MaritalStatus;
+                testemp.WorkPhoneNumber = report.WorkPhoneNumber;
+                testemp.PersonalEmail = report.PersonalEmail;
+                testemp.PersonalPhone = report.PersonalPhone;
+                testemp.PriviousExperience = report.PriviousExperience;
+                testemp.ProfilePicture = report.ProfilePicture;
+                test.EmployeeVMs = testemp;
+                testlist.Add(test);
+            }
+            return testlist;
+        }
+
+
+        public dynamic EmployeesinNoticePeriod()
+        {
+            List<TestEmployeeList> testlist = new List<TestEmployeeList>();
+            TestEmployeeVM testemp = new TestEmployeeVM();
+
+            var report1 = _context.EmployeeModules.Where(x =>x.IsDeleted != true && x.IsActivated ==true && x.InNoticePeriod == true).ToList();
+
+            foreach (var report in report1)
+            {
+                TestEmployeeList test = new TestEmployeeList();
+                var secondmanager = report1.Where(s => s.SecondLevelReportingManager == report.SecondLevelReportingManager).ToList();
+                test.FirstLevelReportingManager = report.FirstLevelReportingManager;
+                test.FirstLevelReportingManagerName = _context.EmployeeModules.First(w => w.EmployeeId == report.FirstLevelReportingManager).Name;
+                test.SecondLevelReportingManager = report.SecondLevelReportingManager;
+                test.SecondLevelReportingManagerName = _context.EmployeeModules.First(w => w.EmployeeId == report.SecondLevelReportingManager).Name;
+                testemp = new TestEmployeeVM();
+                testemp.EmployeeId = report.EmployeeId;
+                testemp.Name = report.Name;
+                testemp.Age = report.Age;
+                testemp.DateOfBirth = report.DateOfBirth;
+                testemp.RoleId = report.RoleId;
+                testemp.DateOfJoining = report.DateOfJoining;
+                testemp.DepartmentId = report.DepartmentId;
+                testemp.DepartmentName = _context.Departments.First(s => s.DepartmentId == report.DepartmentId).DepartmentName;
+                testemp.DesignationId = report.DesignationId;
+                testemp.DesignationName = _context.Designations.First(s => s.DesignationId == report.DesignationId).DesignationName;
+                testemp.Gender = report.Gender;
+                testemp.MaritalStatus = report.MaritalStatus;
+                testemp.WorkPhoneNumber = report.WorkPhoneNumber;
+                testemp.PersonalEmail = report.PersonalEmail;
+                testemp.PersonalPhone = report.PersonalPhone;
+                testemp.PriviousExperience = report.PriviousExperience;
+                testemp.ProfilePicture = report.ProfilePicture;
+                test.EmployeeVMs = testemp;
+                testlist.Add(test);
+            }
+            return testlist;
+        }
+
+        public dynamic ResignedEmployeeList()
+        {
+            List<TestEmployeeList> testlist = new List<TestEmployeeList>();
+            TestEmployeeVM testemp = new TestEmployeeVM();
+
+            var report1 = _context.EmployeeModules.Where(x => x.IsResigned == true).ToList();
+
+            foreach (var report in report1)
+            {
+                TestEmployeeList test = new TestEmployeeList();
+                var secondmanager = report1.Where(s => s.SecondLevelReportingManager == report.SecondLevelReportingManager).ToList();
+                test.FirstLevelReportingManager = report.FirstLevelReportingManager;
+                test.FirstLevelReportingManagerName = _context.EmployeeModules.First(w => w.EmployeeId == report.FirstLevelReportingManager).Name;
+                test.SecondLevelReportingManager = report.SecondLevelReportingManager;
+                test.SecondLevelReportingManagerName = _context.EmployeeModules.First(w => w.EmployeeId == report.SecondLevelReportingManager).Name;
+                testemp = new TestEmployeeVM();
+                testemp.EmployeeId = report.EmployeeId;
+                testemp.Name = report.Name;
+                testemp.RoleId = report.RoleId;
+                testemp.Age = report.Age;
+                testemp.DateOfBirth = report.DateOfBirth;
+                testemp.DateOfJoining = report.DateOfJoining;
+                testemp.DepartmentId = report.DepartmentId;
+                testemp.DepartmentName = _context.Departments.First(s => s.DepartmentId == report.DepartmentId).DepartmentName;
+                testemp.DesignationId = report.DesignationId;
+                testemp.DesignationName = _context.Designations.First(s => s.DesignationId == report.DesignationId).DesignationName;
+                testemp.Gender = report.Gender;
+                testemp.MaritalStatus = report.MaritalStatus;
+                testemp.WorkPhoneNumber = report.WorkPhoneNumber;
+                testemp.PersonalEmail = report.PersonalEmail;
+                testemp.PersonalPhone = report.PersonalPhone;
+                testemp.PriviousExperience = report.PriviousExperience;
+                testemp.ProfilePicture = report.ProfilePicture;
+                test.EmployeeVMs = testemp;
+                testlist.Add(test);
+            }
+            return testlist;
+        }
+
         public dynamic EmployeeHierachy(int employeeId)
         {
             ManagerVM manager = new ManagerVM();

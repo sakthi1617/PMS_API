@@ -19,6 +19,12 @@ namespace PMS_API.Repository
         public string UpdateDesignation(int id , DesignationVM designation);      
        // public List<EmployeeModule> EmployeeList();        
         public dynamic EmployeeList();        
+
+        public dynamic InactiveEmployeeList();
+
+        public dynamic EmployeesinNoticePeriod();
+
+        public dynamic ResignedEmployeeList();
         public dynamic EmployeeHierachy(int employeeId);        
         public EmployeeModule EmployeeById(string EmployeeIdentity);
         public List<EmployeeModule> EmployeeByDepartment(int id);

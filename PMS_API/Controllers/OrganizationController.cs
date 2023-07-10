@@ -422,6 +422,110 @@ namespace PMS_API.Controllers
         }
         #endregion
         [HttpGet]
+        [Route("InactiveEmployeeList")]
+        public async Task<IActionResult> InactiveEmployeeList()
+        {
+            try
+            {
+
+                var result = repository.InactiveEmployeeList();
+
+
+                return Ok(new SuccessResponse<object>
+                {
+
+                    ModelData = new
+                    {
+
+                        EMployeeDetails = result
+                    },
+                    statusCode = "200",
+                    Response = "ok"
+
+                });
+            }
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        [HttpGet]
+        [Route("EmployeesinNoticePeriod")]
+        public async Task<IActionResult> EmployeesinNoticePeriod()
+        {
+            try
+            {
+
+                var result = repository.EmployeesinNoticePeriod();
+
+
+                return Ok(new SuccessResponse<object>
+                {
+
+                    ModelData = new
+                    {
+
+                        EMployeeDetails = result
+                    },
+                    statusCode = "200",
+                    Response = "ok"
+
+                });
+            }
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+        [HttpGet]
+        [Route("ResignedEmployeeList")]
+        public async Task<IActionResult> ResignedEmployeeList()
+        {
+            try
+            {
+
+                var result = repository.ResignedEmployeeList();
+
+
+                return Ok(new SuccessResponse<object>
+                {
+
+                    ModelData = new
+                    {
+
+                        EMployeeDetails = result
+                    },
+                    statusCode = "200",
+                    Response = "ok"
+
+                });
+            }
+            catch (Exception ex)
+            {
+
+                ApiLog.Log("LogFile", ex.Message, ex.StackTrace, 10);
+                return BadRequest(new FailureResponse<object>
+                {
+                    Error = ex.Message,
+                    IsreponseSuccess = false
+                });
+            }
+        }
+
+
+        [HttpGet]
         [Route("EmployeeHierachy")]
         public async Task<IActionResult> EmployeeHierachy(int employeeId)
         {

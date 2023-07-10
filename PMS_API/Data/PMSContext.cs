@@ -9,8 +9,6 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Org.BouncyCastle.Utilities.Collections;
 using PMS_API.Models;
 using PMS_API.ViewModels;
-
-
 namespace PMS_API.Data
 {
 
@@ -27,9 +25,10 @@ namespace PMS_API.Data
 
         public virtual DbSet<AggregatedCounter> AggregatedCounters { get; set; } = null!;
         public virtual DbSet<Counter> Counters { get; set; } = null!;
+        public virtual DbSet<DelayedGoal> DelayedGoals { get; set; } = null!;
         public virtual DbSet<Department> Departments { get; set; } = null!;
         public virtual DbSet<Designation> Designations { get; set; } = null!;
-        public virtual DbSet<Designation1> Designations1 { get; set; } = null!;
+        public virtual DbSet<DocumentTypeAnswer> DocumentTypeAnswers { get; set; } = null!;
         public virtual DbSet<EmployeeAttachment> EmployeeAttachments { get; set; } = null!;
         public virtual DbSet<EmployeeGoalReview> EmployeeGoalReviews { get; set; } = null!;
         public virtual DbSet<EmployeeModule> EmployeeModules { get; set; } = null!;
@@ -43,7 +42,13 @@ namespace PMS_API.Data
         public virtual DbSet<ManagerGoalReview> ManagerGoalReviews { get; set; } = null!;
         public virtual DbSet<ManagersTbl> ManagersTbls { get; set; } = null!;
         public virtual DbSet<ManangerAttachment> ManangerAttachments { get; set; } = null!;
-        public virtual DbSet<Stage> Stages { get; set; } = null!;
+        public virtual DbSet<MonthwiseRating> MonthwiseRatings { get; set; } = null!;
+        public virtual DbSet<QuestionBank> QuestionBanks { get; set; } = null!;
+        public virtual DbSet<QuestionMarkType> QuestionMarkTypes { get; set; } = null!;
+        public virtual DbSet<QuestionPaper> QuestionPapers { get; set; } = null!;
+        public virtual DbSet<QuestionPaperIdentity> QuestionPaperIdentities { get; set; } = null!;
+        public virtual DbSet<QuestionType> QuestionTypes { get; set; } = null!;
+        public virtual DbSet<QuetionLevel> QuetionLevels { get; set; } = null!;
         public virtual DbSet<RequestForApproved> RequestForApproveds { get; set; } = null!;
         public virtual DbSet<ResponseEmail> ResponseEmails { get; set; } = null!;
         public virtual DbSet<Role> Roles { get; set; } = null!;
@@ -51,14 +56,13 @@ namespace PMS_API.Data
         public virtual DbSet<Server> Servers { get; set; } = null!;
         public virtual DbSet<Set> Sets { get; set; } = null!;
         public virtual DbSet<Skill> Skills { get; set; } = null!;
+        public virtual DbSet<Stage> Stages { get; set; } = null!;
         public virtual DbSet<State> States { get; set; } = null!;
+        public virtual DbSet<Team> Teams { get; set; } = null!;
         public virtual DbSet<TimeSettingTbl> TimeSettingTbls { get; set; } = null!;
         public virtual DbSet<UserLevel> UserLevels { get; set; } = null!;
         public virtual DbSet<Weightage> Weightages { get; set; } = null!;
-        public virtual DbSet<DelayedGoal> DelayedGoals { get; set; } = null!;
-        public virtual DbSet<Team> Teams { get; set; } = null!;
-        public virtual DbSet<MonthwiseRating> MonthwiseRatings { get; set; } = null!;
-        public virtual DbSet<QuestionBank> QuestionBanks { get; set; } = null!;
+        public virtual DbSet<TestStatus> TestStatuses { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -100,6 +104,31 @@ namespace PMS_API.Data
                 entity.Property(e => e.Key).HasMaxLength(100);
             });
 
+            modelBuilder.Entity<DelayedGoal>(entity =>
+            {
+                entity.ToTable("Delayed_Goals");
+
+                entity.Property(e => e.AdminApprovedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.AssignedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.AssingedManagerId).HasColumnName("AssingedManagerID");
+
+                entity.Property(e => e.DueDate).HasColumnType("date");
+
+                entity.Property(e => e.StartDate).HasColumnType("date");
+
+                entity.HasOne(d => d.AssingedManager)
+                    .WithMany(p => p.DelayedGoals)
+                    .HasForeignKey(d => d.AssingedManagerId)
+                    .HasConstraintName("FK__Delayed_G__Assin__56E8E7AB");
+
+                entity.HasOne(d => d.Employee)
+                    .WithMany(p => p.DelayedGoals)
+                    .HasForeignKey(d => d.EmployeeId)
+                    .HasConstraintName("FK__Delayed_G__Emplo__55F4C372");
+            });
+
             modelBuilder.Entity<Department>(entity =>
             {
                 entity.ToTable("Department");
@@ -111,34 +140,34 @@ namespace PMS_API.Data
 
             modelBuilder.Entity<Designation>(entity =>
             {
-                entity.ToTable("Designation");
-
-                entity.Property(e => e.AddTime).HasColumnType("datetime");
-
-                entity.Property(e => e.ModifiedTime).HasColumnType("datetime");
-            });
-
-            modelBuilder.Entity<Designation1>(entity =>
-            {
-                entity.HasKey(e => e.DesignationId)
-                    .HasName("PK__Designat__BABD60DE780CAE1E");
-
-                entity.ToTable("Designations");
-
                 entity.Property(e => e.AddTime).HasColumnType("datetime");
 
                 entity.Property(e => e.ModifiedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Department)
-                    .WithMany(p => p.Designation1s)
+                    .WithMany(p => p.Designations)
                     .HasForeignKey(d => d.DepartmentId)
                     .HasConstraintName("FK__Designati__Depar__5D95E53A");
+            });
+
+            modelBuilder.Entity<DocumentTypeAnswer>(entity =>
+            {
+                entity.HasKey(e => e.DocumentId)
+                    .HasName("PK__Document__1ABEEF0FED6A9795");
+
+                entity.Property(e => e.AssigndAt).HasColumnType("datetime");
+
+                entity.Property(e => e.DocumentUrl).HasColumnName("DocumentURL");
+
+                entity.Property(e => e.SubmittedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.ValidatedAt).HasColumnType("datetime");
             });
 
             modelBuilder.Entity<EmployeeAttachment>(entity =>
             {
                 entity.HasKey(e => e.AttachmentId)
-                    .HasName("PK__Employee__442C64BEAB3EF546");
+                    .HasName("PK__Employee__442C64BE71E21521");
 
                 entity.Property(e => e.CreatedOn).HasColumnType("datetime");
 
@@ -149,13 +178,13 @@ namespace PMS_API.Data
                 entity.HasOne(d => d.EmpReview)
                     .WithMany(p => p.EmployeeAttachments)
                     .HasForeignKey(d => d.EmpReviewId)
-                    .HasConstraintName("FK__EmployeeA__EmpRe__2EDAF651");
+                    .HasConstraintName("FK__EmployeeA__EmpRe__4A8310C6");
             });
 
             modelBuilder.Entity<EmployeeGoalReview>(entity =>
             {
                 entity.HasKey(e => e.EmpReviewId)
-                    .HasName("PK__Employee__3BB9902F15D51F87");
+                    .HasName("PK__Employee__3BB9902FF9EAC844");
 
                 entity.ToTable("EmployeeGoalReview");
 
@@ -165,23 +194,24 @@ namespace PMS_API.Data
 
                 entity.Property(e => e.CreatedOn).HasColumnType("datetime");
 
-                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
                 entity.Property(e => e.GoalRating).HasColumnType("decimal(18, 1)");
 
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
                 entity.HasOne(d => d.AssingedManager)
-                    .WithMany(p => p.EmployeeGoalReviews)
+                    .WithMany(p => p.EmployeeGoalReviewAssingedManagers)
                     .HasForeignKey(d => d.AssingedManagerId)
-                    .HasConstraintName("FK__EmployeeG__Assin__2B0A656D");
+                    .HasConstraintName("FK__EmployeeG__Assin__7A3223E8");
 
                 entity.HasOne(d => d.Employee)
-                    .WithMany(p => p.EmployeeGoalReviews)
+                    .WithMany(p => p.EmployeeGoalReviewEmployees)
                     .HasForeignKey(d => d.EmployeeId)
-                    .HasConstraintName("FK__EmployeeG__Emplo__2A164134");
+                    .HasConstraintName("FK__EmployeeG__Emplo__46B27FE2");
 
                 entity.HasOne(d => d.Goal)
                     .WithMany(p => p.EmployeeGoalReviews)
                     .HasForeignKey(d => d.GoalId)
-                    .HasConstraintName("FK__EmployeeG__GoalI__2BFE89A6");
+                    .HasConstraintName("FK__EmployeeG__GoalI__47A6A41B");
             });
 
             modelBuilder.Entity<EmployeeModule>(entity =>
@@ -192,9 +222,8 @@ namespace PMS_API.Data
                 entity.ToTable("EmployeeModule");
 
                 entity.Property(e => e.AddTime).HasColumnType("datetime");
-                entity.Property(e => e.TotalExperience).HasColumnType("decimal(18, 2)");
+
                 entity.Property(e => e.CurrentExperience).HasColumnType("decimal(18, 2)");
-                entity.Property(e => e.PriviousExperience).HasColumnType("decimal(18, 2)");
 
                 entity.Property(e => e.DateOfBirth).HasColumnType("date");
 
@@ -202,13 +231,23 @@ namespace PMS_API.Data
 
                 entity.Property(e => e.FirstLevelReportingManager).HasColumnName("First Level Reporting Manager");
 
+                entity.Property(e => e.IsPublished).HasColumnName("isPublished");
+
+                entity.Property(e => e.IsWantToPublish).HasColumnName("isWantToPublish");
+
                 entity.Property(e => e.ModifiedTime).HasColumnType("datetime");
 
+                entity.Property(e => e.PerformanceLevel).HasColumnType("decimal(18, 2)");
+
                 entity.Property(e => e.PersonalEmail).HasColumnName("personalEmail");
+
+                entity.Property(e => e.PriviousExperience).HasColumnType("decimal(18, 2)");
 
                 entity.Property(e => e.Salary).HasColumnType("money");
 
                 entity.Property(e => e.SecondLevelReportingManager).HasColumnName("Second Level Reporting Manager");
+
+                entity.Property(e => e.TotalExperience).HasColumnType("decimal(18, 2)");
 
                 entity.HasOne(d => d.Department)
                     .WithMany(p => p.EmployeeModules)
@@ -218,17 +257,12 @@ namespace PMS_API.Data
                 entity.HasOne(d => d.Designation)
                     .WithMany(p => p.EmployeeModules)
                     .HasForeignKey(d => d.DesignationId)
-                    .HasConstraintName("FK__EmployeeM__Desig__4D94879B");
-
-                entity.HasOne(d => d.DesignationNavigation)
-                    .WithMany(p => p.EmployeeModules)
-                    .HasForeignKey(d => d.DesignationId)
-                    .HasConstraintName("FK__EmployeeM__Desig__5E8A0973");
+                    .HasConstraintName("FK__EmployeeM__Desig__16CE6296");
 
                 entity.HasOne(d => d.FirstLevelReportingManagerNavigation)
-                    .WithMany(p => p.EmployeeModuleFirstLevelReportingManagerNavigations)
+                    .WithMany(p => p.InverseFirstLevelReportingManagerNavigation)
                     .HasForeignKey(d => d.FirstLevelReportingManager)
-                    .HasConstraintName("FK__EmployeeM__First__5EBF139D");
+                    .HasConstraintName("FK__EmployeeM__First__625A9A57");
 
                 entity.HasOne(d => d.Role)
                     .WithMany(p => p.EmployeeModules)
@@ -236,9 +270,14 @@ namespace PMS_API.Data
                     .HasConstraintName("FK__EmployeeM__RoleI__4E88ABD4");
 
                 entity.HasOne(d => d.SecondLevelReportingManagerNavigation)
-                    .WithMany(p => p.EmployeeModuleSecondLevelReportingManagerNavigations)
+                    .WithMany(p => p.InverseSecondLevelReportingManagerNavigation)
                     .HasForeignKey(d => d.SecondLevelReportingManager)
-                    .HasConstraintName("FK__EmployeeM__Secon__5FB337D6");
+                    .HasConstraintName("FK__EmployeeM__Secon__634EBE90");
+
+                entity.HasOne(d => d.Team)
+                    .WithMany(p => p.EmployeeModules)
+                    .HasForeignKey(d => d.TeamId)
+                    .HasConstraintName("FK__EmployeeM__TeamI__671F4F74");
             });
 
             modelBuilder.Entity<GoalModule>(entity =>
@@ -248,28 +287,30 @@ namespace PMS_API.Data
 
                 entity.ToTable("GoalModule");
 
-                entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-
                 entity.Property(e => e.AssingedManagerId).HasColumnName("AssingedManagerID");
 
+                entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+
                 entity.Property(e => e.DueDate).HasColumnType("date");
+
+                entity.Property(e => e.IsEmpExtentionApprovedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.IsManagerExtentionApprovedAt).HasColumnType("datetime");
 
                 entity.Property(e => e.ModifyAt).HasColumnType("datetime");
 
                 entity.Property(e => e.StartDate).HasColumnType("date");
-                
 
                 entity.HasOne(d => d.AssingedManager)
-                    .WithMany(p => p.GoalModules)
+                    .WithMany(p => p.GoalModuleAssingedManagers)
                     .HasForeignKey(d => d.AssingedManagerId)
-                    .HasConstraintName("FK__GoalModul__Assin__2739D489");
+                    .HasConstraintName("FK__GoalModul__Assin__7849DB76");
 
                 entity.HasOne(d => d.Employee)
-                    .WithMany(p => p.GoalModules)
+                    .WithMany(p => p.GoalModuleEmployees)
                     .HasForeignKey(d => d.EmployeeId)
                     .HasConstraintName("FK__GoalModul__Emplo__5AEE82B9");
             });
-
 
             modelBuilder.Entity<GoalRating>(entity =>
             {
@@ -284,7 +325,11 @@ namespace PMS_API.Data
 
                 entity.Property(e => e.ManagerId).HasColumnName("ManagerID");
 
+                entity.Property(e => e.RatingbyEmployee).HasColumnType("decimal(18, 2)");
+
                 entity.Property(e => e.RatingbyEmployeeCalculatedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.RatingbyManager).HasColumnType("decimal(18, 2)");
 
                 entity.Property(e => e.RatingbyManagerCalculatedAt)
                     .HasColumnType("datetime")
@@ -293,11 +338,8 @@ namespace PMS_API.Data
                 entity.HasOne(d => d.Employee)
                     .WithMany(p => p.GoalRatings)
                     .HasForeignKey(d => d.EmployeeId)
-
-
                     .HasConstraintName("FK__GoalRatin__Emplo__3A4CA8FD");
             });
-
 
             modelBuilder.Entity<Hash>(entity =>
             {
@@ -380,7 +422,7 @@ namespace PMS_API.Data
             modelBuilder.Entity<ManagerGoalReview>(entity =>
             {
                 entity.HasKey(e => e.ManagerReviewId)
-                    .HasName("PK__ManagerG__FDA69B421D4B6F29");
+                    .HasName("PK__ManagerG__FDA69B42C7D4CE98");
 
                 entity.ToTable("ManagerGoalReview");
 
@@ -390,29 +432,31 @@ namespace PMS_API.Data
 
                 entity.Property(e => e.CreatedOn).HasColumnType("datetime");
 
-                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+                entity.Property(e => e.EmpReviewId).HasColumnName("EmpReviewID");
 
                 entity.Property(e => e.GoalRating).HasColumnType("decimal(18, 1)");
 
+                entity.Property(e => e.ModifiedOn).HasColumnType("datetime");
+
                 entity.HasOne(d => d.AssingedManager)
-                    .WithMany(p => p.ManagerGoalReviews)
+                    .WithMany(p => p.ManagerGoalReviewAssingedManagers)
                     .HasForeignKey(d => d.AssingedManagerId)
-                    .HasConstraintName("FK__ManagerGo__Assin__32AB8735");
-
-                entity.HasOne(d => d.Employee)
-                    .WithMany(p => p.ManagerGoalReviews)
-                    .HasForeignKey(d => d.EmployeeId)
-                    .HasConstraintName("FK__ManagerGo__Emplo__31B762FC");
-
-                entity.HasOne(d => d.Goal)
-                    .WithMany(p => p.ManagerGoalReviews)
-                    .HasForeignKey(d => d.GoalId)
-                    .HasConstraintName("FK__ManagerGo__GoalI__339FAB6E");
+                    .HasConstraintName("FK__ManagerGo__Assin__7B264821");
 
                 entity.HasOne(d => d.EmpReview)
                     .WithMany(p => p.ManagerGoalReviews)
                     .HasForeignKey(d => d.EmpReviewId)
-                    .HasConstraintName("FK__ManagerGo__EmpRe__37703C52");
+                    .HasConstraintName("FK__ManagerGo__EmpRe__4F47C5E3");
+
+                entity.HasOne(d => d.Employee)
+                    .WithMany(p => p.ManagerGoalReviewEmployees)
+                    .HasForeignKey(d => d.EmployeeId)
+                    .HasConstraintName("FK__ManagerGo__Emplo__4E53A1AA");
+
+                entity.HasOne(d => d.Goal)
+                    .WithMany(p => p.ManagerGoalReviews)
+                    .HasForeignKey(d => d.GoalId)
+                    .HasConstraintName("FK__ManagerGo__GoalI__503BEA1C");
             });
 
             modelBuilder.Entity<ManagersTbl>(entity =>
@@ -423,8 +467,6 @@ namespace PMS_API.Data
                 entity.ToTable("Managers_tbl");
 
                 entity.Property(e => e.ManagerId).HasColumnName("ManagerID");
-                entity.Property(e => e.Reporting1Person).HasColumnName("Reporting1Person");
-                entity.Property(e => e.Reporting2Person).HasColumnName("Reporting2Person");
 
                 entity.Property(e => e.ContactNumber).HasMaxLength(100);
 
@@ -437,7 +479,7 @@ namespace PMS_API.Data
             modelBuilder.Entity<ManangerAttachment>(entity =>
             {
                 entity.HasKey(e => e.AttachmentId)
-                    .HasName("PK__Mananger__442C64BE4C14E318");
+                    .HasName("PK__Mananger__442C64BE8D9D1CDF");
 
                 entity.Property(e => e.CreatedOn).HasColumnType("datetime");
 
@@ -448,13 +490,161 @@ namespace PMS_API.Data
                 entity.HasOne(d => d.ManagerReview)
                     .WithMany(p => p.ManangerAttachments)
                     .HasForeignKey(d => d.ManagerReviewId)
-                    .HasConstraintName("FK__ManangerA__Manag__367C1819");
+                    .HasConstraintName("FK__ManangerA__Manag__531856C7");
             });
 
-            //modelBuilder.Entity<Potential>(entity =>
-            //{
-            //    entity.ToTable("Potential");
-            //});
+            modelBuilder.Entity<MonthwiseRating>(entity =>
+            {
+                entity.ToTable("MonthwiseRating");
+
+                entity.Property(e => e.April).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.August).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.CalculatedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.December).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.February).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.January).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.July).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.June).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.March).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.May).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.November).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.October).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.OverallRating).HasColumnType("decimal(18, 2)");
+
+                entity.Property(e => e.September).HasColumnType("decimal(18, 2)");
+            });
+
+            modelBuilder.Entity<QuestionBank>(entity =>
+            {
+                entity.HasKey(e => e.QuestionId)
+                    .HasName("PK__Question__0DC06F8C1ED405DB");
+
+                entity.ToTable("QuestionBank");
+
+                entity.Property(e => e.QuestionId).HasColumnName("QuestionID");
+
+                entity.Property(e => e.CorrectOption).HasColumnName("Correct_option");
+
+                entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+
+                entity.Property(e => e.OptionA).HasColumnName("Option_A");
+
+                entity.Property(e => e.OptionB).HasColumnName("Option_B");
+
+                entity.Property(e => e.OptionC).HasColumnName("Option_C");
+
+                entity.Property(e => e.OptionD).HasColumnName("Option_D");
+
+                entity.Property(e => e.SkillLevel).HasColumnName("skillLevel");
+
+                entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+                entity.HasOne(d => d.MarksNavigation)
+                    .WithMany(p => p.QuestionBanks)
+                    .HasForeignKey(d => d.Marks)
+                    .HasConstraintName("FK__QuestionB__Marks__13F1F5EB");
+
+                entity.HasOne(d => d.QuestionLevelNavigation)
+                    .WithMany(p => p.QuestionBanks)
+                    .HasForeignKey(d => d.QuestionLevel)
+                    .HasConstraintName("FK__QuestionB__Quest__12FDD1B2");
+
+                entity.HasOne(d => d.QuestionTypeNavigation)
+                    .WithMany(p => p.QuestionBanks)
+                    .HasForeignKey(d => d.QuestionType)
+                    .HasConstraintName("FK__QuestionB__Quest__078C1F06");
+
+                entity.HasOne(d => d.Skill)
+                    .WithMany(p => p.QuestionBanks)
+                    .HasForeignKey(d => d.SkillId)
+                    .HasConstraintName("FK__QuestionB__Skill__02C769E9");
+            });
+
+            modelBuilder.Entity<QuestionMarkType>(entity =>
+            {
+                entity.ToTable("QuestionMarkType");
+
+                entity.Property(e => e.QuestionMarkTypeId).HasColumnName("QuestionMarkTypeID");
+            });
+
+            modelBuilder.Entity<QuestionPaper>(entity =>
+            {
+                entity.Property(e => e.Id).HasColumnName("id");
+
+                entity.Property(e => e.OptionA).HasColumnName("Option_A");
+
+                entity.Property(e => e.OptionB).HasColumnName("Option_B");
+
+                entity.Property(e => e.OptionC).HasColumnName("Option_C");
+
+                entity.Property(e => e.OptionD).HasColumnName("Option_D");
+
+                entity.Property(e => e.QuestionPaperId).HasColumnName("QuestionPaperID");
+
+                entity.HasOne(d => d.QuestionNavigation)
+                    .WithMany(p => p.QuestionPapers)
+                    .HasForeignKey(d => d.QuestionId)
+                    .HasConstraintName("FK__QuestionP__Quest__0D44F85C");
+
+                entity.HasOne(d => d.QuestionPaperNavigation)
+                    .WithMany(p => p.QuestionPapers)
+                    .HasForeignKey(d => d.QuestionPaperId)
+                    .HasConstraintName("FK__QuestionP__Quest__0C50D423");
+
+                entity.HasOne(d => d.QuestionTypeNavigation)
+                    .WithMany(p => p.QuestionPapers)
+                    .HasForeignKey(d => d.QuestionType)
+                    .HasConstraintName("FK__QuestionP__Quest__0E391C95");
+            });
+
+            modelBuilder.Entity<QuestionPaperIdentity>(entity =>
+            {
+                entity.HasKey(e => e.QuestionPaperId)
+                    .HasName("PK__Question__BBB4378D6994C246");
+
+                entity.ToTable("QuestionPaperIdentity");
+
+                entity.Property(e => e.QuestionPaperId).HasColumnName("QuestionPaperID");
+
+                entity.Property(e => e.CreatedOn).HasColumnType("datetime");
+
+                entity.Property(e => e.IsDeleted).HasColumnName("isDeleted");
+
+                entity.Property(e => e.SkillId).HasColumnName("skillId");
+
+                entity.Property(e => e.SkillLevel).HasColumnName("skillLevel");
+            });
+
+            modelBuilder.Entity<QuestionType>(entity =>
+            {
+                entity.HasKey(e => e.TypeId)
+                    .HasName("PK__Question__516F0395D67A0A45");
+
+                entity.ToTable("QuestionType");
+
+                entity.Property(e => e.TypeId).HasColumnName("TypeID");
+
+                entity.Property(e => e.QuestionType1).HasColumnName("QuestionType");
+            });
+
+            modelBuilder.Entity<QuetionLevel>(entity =>
+            {
+                entity.ToTable("QuetionLevel");
+
+                entity.Property(e => e.QuetionLevelId).HasColumnName("QuetionLevelID");
+            });
 
             modelBuilder.Entity<RequestForApproved>(entity =>
             {
@@ -579,6 +769,16 @@ namespace PMS_API.Data
                     .HasConstraintName("FK_HangFire_State_Job");
             });
 
+            modelBuilder.Entity<Team>(entity =>
+            {
+                entity.ToTable("Team");
+
+                entity.HasOne(d => d.Department)
+                    .WithMany(p => p.Teams)
+                    .HasForeignKey(d => d.DepartmentId)
+                    .HasConstraintName("FK__Team__Department__662B2B3B");
+            });
+
             modelBuilder.Entity<TimeSettingTbl>(entity =>
             {
                 entity.ToTable("TimeSettingTbl");
@@ -613,115 +813,34 @@ namespace PMS_API.Data
                 entity.HasOne(d => d.Designation)
                     .WithMany(p => p.Weightages)
                     .HasForeignKey(d => d.DesignationId)
-                    .HasConstraintName("FK__Weightage__Desig__45F365D3");
+                    .HasConstraintName("FK__Weightage__Desig__17C286CF");
 
                 entity.HasOne(d => d.Skill)
                     .WithMany(p => p.Weightages)
                     .HasForeignKey(d => d.SkillId)
                     .HasConstraintName("FK__Weightage__Skill__46E78A0C");
+            });
 
-                entity.HasOne(d => d.Team)
-                    .WithMany(p => p.Weightages)
-                    .HasForeignKey(d => d.TeamId)
-                    .HasConstraintName("FK__Weightage__TeamI__690797E6");
-           
-
-        });
-
-            modelBuilder.Entity<DelayedGoal>(entity =>
+            modelBuilder.Entity<TestStatus>(entity =>
             {
-                entity.ToTable("Delayed_Goals");
+                entity.HasKey(e => e.StatusId)
+                    .HasName("PK__TestStat__C8EE2043FCC057BC");
 
-                entity.Property(e => e.AdminApprovedAt).HasColumnType("datetime");
+                entity.ToTable("TestStatus");
+
+                entity.Property(e => e.StatusId).HasColumnName("StatusID");
 
                 entity.Property(e => e.AssignedAt).HasColumnType("datetime");
 
-                entity.Property(e => e.AssingedManagerId).HasColumnName("AssingedManagerID");
+                entity.Property(e => e.CompletedAt).HasColumnType("datetime");
 
-                entity.Property(e => e.DueDate).HasColumnType("date");
+                entity.Property(e => e.ItHaveADocument).HasColumnName("It_Have_a_Document");
 
-                entity.Property(e => e.StartDate).HasColumnType("date");
+                entity.Property(e => e.OpenedAt).HasColumnType("datetime");
 
-                entity.HasOne(d => d.AssingedManager)
-                    .WithMany(p => p.DelayedGoals)
-                    .HasForeignKey(d => d.AssingedManagerId)
-                    .HasConstraintName("FK__Delayed_G__Assin__56E8E7AB");
+                entity.Property(e => e.TestStatus1).HasColumnName("TestStatus");
 
-                entity.HasOne(d => d.Employee)
-                    .WithMany(p => p.DelayedGoals)
-                    .HasForeignKey(d => d.EmployeeId)
-                    .HasConstraintName("FK__Delayed_G__Emplo__55F4C372");
-            });
-            modelBuilder.Entity<MonthwiseRating>(entity =>
-            {
-                entity.ToTable("MonthwiseRating");
-
-                entity.Property(e => e.April).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.August).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.CalculatedAt).HasColumnType("datetime");
-
-                entity.Property(e => e.December).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.February).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.January).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.July).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.June).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.March).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.May).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.November).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.October).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.OverallRating).HasColumnType("decimal(18, 2)");
-
-                entity.Property(e => e.September).HasColumnType("decimal(18, 2)");
-            });
-
-            modelBuilder.Entity<QuestionBank>(entity =>
-            {
-                entity.HasKey(e => e.QuestionId)
-                    .HasName("PK__Question__0DC06F8C1ED405DB");
-
-                entity.ToTable("QuestionBank");
-
-                entity.Property(e => e.QuestionId).HasColumnName("QuestionID");
-
-                entity.Property(e => e.CorrectOption).HasColumnName("Correct_option");
-
-                entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-
-                entity.Property(e => e.OptionA).HasColumnName("Option_A");
-
-                entity.Property(e => e.OptionB).HasColumnName("Option_B");
-
-                entity.Property(e => e.OptionC).HasColumnName("Option_C");
-
-                entity.Property(e => e.OptionD).HasColumnName("Option_D");
-
-                entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
-
-                entity.HasOne(d => d.Skill)
-                    .WithMany(p => p.QuestionBanks)
-                    .HasForeignKey(d => d.SkillId)
-                    .HasConstraintName("FK__QuestionB__Skill__02C769E9");
-            });
-
-            modelBuilder.Entity<Team>(entity =>
-            {
-                entity.ToTable("Team");
-
-                entity.HasOne(d => d.Department)
-                    .WithMany(p => p.Teams)
-                    .HasForeignKey(d => d.DepartmentId)
-                    .HasConstraintName("FK__Team__Department__662B2B3B");
+                entity.Property(e => e.ValidatedAt).HasColumnType("datetime");
             });
 
             OnModelCreatingPartial(modelBuilder);

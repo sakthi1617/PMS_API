@@ -124,9 +124,9 @@ namespace PMS_API.Controllers
         {
             try
             {
-                if (Email != null)
+                if (request.Email != null)
                 {
-                    var A = _passwordService.GeneratePassword(Email, request).ToString();
+                    var A = _passwordService.GeneratePassword(request.Email, request).ToString();
                     if (A == "Your Account has Already Activated")
                     {
                         return StatusCode(StatusCodes.Status208AlreadyReported, new ResponseStatus { status = "Success", message = A , statusCode = StatusCodes.Status208AlreadyReported });
